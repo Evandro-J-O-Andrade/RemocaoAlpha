@@ -18,6 +18,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  // Força troca de senha no primeiro login
+  if (user?.password_reset_required && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />
+  }
+
   return children
 }
 
@@ -33,6 +38,11 @@ export function RequirePermission({
 
   if (loading || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  // ROOT bypass: admin_master tem todos os privilégios
+  if (user.is_root) {
+    return children
   }
 
   const userPerms = user.permissions
