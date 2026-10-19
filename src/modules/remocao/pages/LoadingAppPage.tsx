@@ -49,9 +49,9 @@ export function LoadingAppPage() {
     <StatePage
       variant="loading"
       icon={<Loader2 size={40} className="animate-spin" />}
-      title="Preparando sua gestão"
+      title="Carregando seus dados"
       description="Validando sessão e carregando dados essenciais..."
-      showLogo={false}
+      showLogo={true}
     >
       <div className="mt-6 h-1.5 w-48 overflow-hidden rounded-full bg-muted">
         <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
