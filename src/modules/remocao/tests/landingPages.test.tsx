@@ -86,7 +86,7 @@ describe('RollbackPage', () => {
 describe('LoadingAppPage', () => {
   it('renderiza tela de carregamento inicial', () => {
     render(wrap(<LoadingAppPage />))
-    expect(screen.getByText(/preparando sua gestão/i)).toBeTruthy()
+    expect(screen.getByText(/carregando seus dados/i)).toBeTruthy()
   })
 
   it('renderiza fallback após falha simulada', () => {
