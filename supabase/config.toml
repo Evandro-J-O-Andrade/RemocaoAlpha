@@ -1,0 +1,58 @@
+project_id = "remocaoalpha"
+name = "RemocaoAlpha"
+
+[api]
+port = 54323
+schema = "public"
+db_role = "anon"
+db_pool_size = 5
+db_max_pool_size = 40
+
+[db]
+port = 54322
+shadow_port = 54323
+host = "127.0.0.1"
+major_version = 15
+
+[db.throttling]
+db_file_size_limit = "500MB"
+
+[studio]
+port = 54324
+host = "127.0.0.1"
+browser = "browser"
+
+[incoming]
+api_port = 54325
+
+[auth]
+port = 54326
+double_confirm = true
+enable_signup = false
+enable_anonymous = true
+enable_callbacks = false
+enable_confirm_default = true
+enable_user_friendly_auth = true
+enable_implicit_flow = false
+enable_otp = false
+enable_magic_link = false
+
+[auth.email]
+enable_signup = true
+enable_user_friendly_auth = true
+
+[auth.sms]
+enable_signup = true
+enable_user_friendly_auth = true
+
+[functions]
+port = 54327
+verify_jwt = "match_environment"
+
+[storage]
+file_size_limit = "50MB"
+
+[analytics]
+port = 54328
+export_schema = "analytics"
+vector_enabled = false

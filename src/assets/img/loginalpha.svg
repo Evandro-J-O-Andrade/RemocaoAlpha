@@ -1,0 +1,15 @@
+<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="loginGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#loginGrad)" rx="32"/>
+  <text x="200" y="200" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="#0ea5e6">ALPHA</text>
+  <text x="200" y="250" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94a3b8">Gestão de Remoção Hospitalar</text>
+  <circle cx="200" cy="290" r="40" fill="#3b82f6" opacity="0.2"/>
+  <path d="M170 290 L190 310 L230 270" stroke="#0ea5e6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="200" y="380" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#647496">RemocaoAlpha</text>
+  <text x="200" y="410" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#475569">Digite suas credenciais para entrar</text>
+</svg>

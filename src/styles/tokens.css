@@ -1,0 +1,111 @@
+/* ===== CSS TOKENS — RemocaoAlpha Design System ===== */
+
+:root {
+  /* Brand */
+  --brand: #0ea5e6;
+  --brand-hover: #0284c7;
+  --brand-soft: #e0f2fe;
+  --brand-dark: #0369a1;
+
+  /* Surfaces */
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-muted: #f1f5f9;
+
+  /* Background */
+  --bg: #f8fafc;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+
+  /* Borders */
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #0ea5e6;
+
+  /* Text */
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-soft: #94a3b8;
+  --text-disabled: #94a3b8;
+
+  /* Semantic */
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 25px rgb(0 0 0 / 0.10);
+  --shadow-xl: 0 20px 40px rgb(0 0 0 / 0.12);
+  --shadow-focus: 0 0 0 3px rgba(14, 165, 236, 0.25);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* Layout */
+  --header-height: 64px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 64px;
+  --content-max: 1440px;
+
+  /* Typography */
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode */
+html.dark {
+  --surface: #1e293b;
+  --surface-alt: #273449;
+  --surface-elevated: #273449;
+  --surface-muted: #1e293b;
+  --bg: #0f172a;
+  --border: #33415b;
+  --border-strong: #475569;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-soft: #64748b;
+  --text-disabled: #64748b;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 25px rgb(0 0 0 / 0.5);
+  --shadow-xl: 0 20px 40px rgb(0 0 0 / 0.6);
+  --shadow-focus: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}

@@ -1,0 +1,12 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="newwaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="60" fill="transparent"/>
+  <rect x="0" y="10" width="52" height="40" rx="8" fill="url(#newwaveGrad)"/>
+  <text x="60" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#0f172a">New Wave</text>
+  <text x="60" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="400" fill="#647496">Sistema Digital</text>
+</svg>

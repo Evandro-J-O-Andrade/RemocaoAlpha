@@ -1,0 +1,5 @@
+export { useAudioAlert, useAlertRecognition } from './useAudioAlert'
+export type { AlertPriority } from './useAudioAlert'
+export { STATUS_CONFIG, getStatusConfig } from './statusConfig'
+export type { StatusConfig } from './statusConfig'
+export type { AlertaRemocao } from '@/modules/remocao/types'
