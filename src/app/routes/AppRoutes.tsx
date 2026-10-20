@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
 import { LoginPage } from '@/modules/remocao/pages/LoginPage'
 import { CentralRemocoesPage } from '@/modules/remocao/pages/CentralRemocoesPage'
+import { NovaRemocaoPage } from '@/modules/remocao/pages/NovaRemocaoPage'
 import { RemocaoDetailPage } from '@/modules/remocao/pages/RemocaoDetailPage'
 import { DriverInterface } from '@/modules/remocao/pages/DriverInterface'
 import { AdminManagementPage } from '@/modules/remocao/pages/AdminManagementPage'
@@ -74,6 +75,16 @@ export function AppRoutes() {
               </RequirePermission>
             }
           />
+
+          <Route
+            path="/nova-remocao"
+            element={
+              <RequirePermission permissions={[Perm.REMOCACAO_SOLICITAR]}>
+                <NovaRemocaoPage />
+              </RequirePermission>
+            }
+          />
+
 
           <Route
             path="/remocao/:id"
