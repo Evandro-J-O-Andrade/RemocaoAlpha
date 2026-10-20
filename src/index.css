@@ -1209,14 +1209,20 @@ html.dark .login-footer {
 .auth-layout__body {
   display: flex;
   flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
   margin-left: var(--sidebar-width, 280px);
   transition: margin-left 0.3s ease;
 }
 
-.auth-sidebar--closed ~ .auth-layout__body,
-.auth-sidebar--mobile-closed ~ .auth-layout__body {
+.auth-sidebar--closed ~ .auth-layout__body {
   margin-left: 72px;
+}
+
+.auth-sidebar--mobile-closed ~ .auth-layout__body {
+  margin-left: 0;
 }
 
 .auth-header {
@@ -1365,7 +1371,10 @@ html.dark .login-footer {
 
 .auth-main {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.5rem;
   background: var(--background);
 }
