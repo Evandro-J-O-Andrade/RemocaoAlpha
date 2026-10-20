@@ -6,12 +6,20 @@ export default {
     extend: {
       colors: {
         primary: '#0ea5e6',
+        'primary-hover': '#0284c7',
         secondary: '#647496',
         success: '#16a34a',
         warning: '#d97706',
         danger: '#dc2626',
         info: '#2563eb',
         purple: '#7c3aed',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        card: 'var(--card)',
+        border: 'var(--border)',
+        muted: 'var(--muted)',
+        'muted-foreground': 'var(--muted)',
+        destructive: 'var(--danger)',
 
         'bg': '#0f172a',
         'bg-alt': '#1e293b',
