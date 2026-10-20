@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { Search, Filter, RefreshCw, Plus } from 'lucide-react'
+import { Search, Filter, RefreshCw, Plus, BarChart3, List, Inbox, ClipboardList, Users, Ambulance, AlertCircle, CheckCircle } from 'lucide-react'
 import { useRemocao } from '@/modules/remocao/context/RemocaoContext'
 import { STATUS_CONFIG } from '@/modules/remocao/alerts/statusConfig'
 import type { StatusRemocao } from '@/modules/remocao/types'
@@ -35,7 +35,7 @@ export function CentralRemocoesPage() {
       <div className="remocao-page">
         <div className="remocao-page__header">
           <div className="remocao-page__heading">
-            <p className="remocao-eyebrow">Gestão Hospitalar</p>
+            <p className="remocao-eyebrow">Gestão de Remoção Alpha</p>
             <h1 className="remocao-page__title">Central de Remoções</h1>
             <p className="remocao-page__subtitle">Gerenciamento de transporte de pacientes entre unidades de saúde.</p>
           </div>
@@ -62,7 +62,7 @@ export function CentralRemocoesPage() {
               className="remocao-icon-btn"
               title={viewMode === 'cards' ? 'Visualização em tabela' : 'Visualização em cards'}
             >
-              {viewMode === 'cards' ? <span>📊</span> : <span>📋</span>}
+              {viewMode === 'cards' ? <BarChart3 size={16} /> : <List size={16} />}
             </button>
             <button className="remocao-btn remocao-btn--primary">
               <Plus size={18} />
@@ -80,23 +80,23 @@ export function CentralRemocoesPage() {
               <div className="remocao-inline">
                 <span className="remocao-status remocao-status--warning">
                   <span className="remocao-status__dot" />
-                  <span>📋 Programadas: {summary.total_programadas}</span>
+                  <span><ClipboardList size={14} /> Programadas: {summary.total_programadas}</span>
                 </span>
                 <span className="remocao-status remocao-status--danger">
                   <span className="remocao-status__dot" />
-                  <span>👥 Aguard. equipe: {summary.aguardando_motorista}</span>
+                  <span><Users size={14} /> Aguard. equipe: {summary.aguardando_motorista}</span>
                 </span>
                 <span className="remocao-status remocao-status--info">
                   <span className="remocao-status__dot" />
-                  <span>🚑 Em transporte: {summary.em_deslocamento}</span>
+                  <span><Ambulance size={14} /> Em transporte: {summary.em_deslocamento}</span>
                 </span>
                 <span className="remocao-status remocao-status--critical">
                   <span className="remocao-status__dot" />
-                  <span>🔴 Críticas: {summary.criticas}</span>
+                  <span><AlertCircle size={14} /> Críticas: {summary.criticas}</span>
                 </span>
                 <span className="remocao-status remocao-status--success">
                   <span className="remocao-status__dot" />
-                  <span>✅ Concluídas: {summary.concluidas}</span>
+                  <span><CheckCircle size={14} /> Concluídas: {summary.concluidas}</span>
                 </span>
               </div>
             )}
@@ -158,7 +158,7 @@ export function CentralRemocoesPage() {
           </div>
         ) : filteredRemocoes.length === 0 ? (
           <div className="remocao-empty">
-            <span className="remocao-empty__icon">📭</span>
+            <span className="remocao-empty__icon"><Inbox size={24} /></span>
             <p className="remocao-empty__title">Nenhuma remoção encontrada</p>
           </div>
         ) : viewMode === 'table' ? (

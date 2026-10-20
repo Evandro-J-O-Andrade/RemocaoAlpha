@@ -10,7 +10,7 @@ import { StatusMachine } from '@/modules/remocao/services/statusMachine'
 import { CheckinForm, CheckoutForm } from '@/modules/remocao/forms/DriverCheckinCheckoutForm'
 import { ChecklistForm } from '@/modules/remocao/forms/ChecklistForm'
 import { IntercorrenciaForm } from '@/modules/remocao/forms/IntercorrenciaForm'
-import { Header } from '@/modules/remocao/components/Header'
+
 import { StatusBadge } from '@/modules/remocao/components/Alert'
 import { GPSMap } from '@/modules/remocao/components/GPSMap'
 import type { RemocaoDashboardView } from '@/modules/remocao/types'
@@ -107,7 +107,6 @@ export function RemocaoDetailPage() {
   if (loading || !remocao) {
     return (
       <div className="remocao-module min-h-screen">
-        <Header />
         <div className="remocao-page">
           <div className="remocao-empty">
             <span className="remocao-spinner" />
@@ -122,8 +121,6 @@ export function RemocaoDetailPage() {
 
   return (
     <div className="remocao-module min-h-screen">
-      <Header />
-
       <div className="remocao-page">
         <button
           onClick={() => navigate(-1)}

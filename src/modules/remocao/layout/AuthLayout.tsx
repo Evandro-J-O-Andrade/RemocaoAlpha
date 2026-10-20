@@ -122,7 +122,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
           </button>
           <div className="auth-header__title">
-            <h1 className="auth-header__title-text">HIS — Gestao de Remocao</h1>
+            <h1 className="auth-header__title-text">Gestão de Remoção Alpha</h1>
           </div>
           <div className="auth-header__actions">
             <button className="auth-header__icon-btn" title="Notificacoes">
