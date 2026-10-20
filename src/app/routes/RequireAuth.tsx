@@ -26,6 +26,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return children
 }
 
+import { hasEffectivePermission } from '@/modules/remocao/permissions/rbac'
+
 export function RequirePermission({
   permissions: requiredPerms,
   children,
@@ -40,16 +42,7 @@ export function RequirePermission({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // ROOT bypass: admin_master tem todos os privilégios
-  if (user.is_root) {
-    return children
-  }
-
-  const userPerms = user.permissions
-  const required = Array.isArray(requiredPerms) ? requiredPerms : [requiredPerms]
-  const hasAll = required.every((p) => userPerms.includes(p))
-
-  if (!hasAll) {
+  if (!hasEffectivePermission(user.permissions, user.is_root, requiredPerms)) {
     return (
       <FeedbackPage
         variant="forbidden"

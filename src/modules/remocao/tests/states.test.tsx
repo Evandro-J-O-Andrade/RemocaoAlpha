@@ -49,7 +49,7 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('ok')).toBeTruthy()
   })
 
-  it('exibe tela de erro quando hijo lance exceção', () => {
+  it('exibe tela de erro quando filho lance exceção', () => {
     render(
       <MemoryRouter>
         <ErrorBoundary>
@@ -57,9 +57,9 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       </MemoryRouter>
     )
-    expect(screen.getByText('Algo deu errado')).toBeTruthy()
-    expect(screen.getByText('Voltar ao início')).toBeTruthy()
-    expect(screen.getByText('Tentar novamente')).toBeTruthy()
+    expect(screen.getByText(/algo não saiu como esperado/i)).toBeTruthy()
+    expect(screen.getByText(/voltar ao início/i)).toBeTruthy()
+    expect(screen.getByText(/tentar novamente/i)).toBeTruthy()
   })
 
   it('permite resetar o estado de erro', () => {
@@ -71,13 +71,13 @@ describe('ErrorBoundary', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('Algo deu errado')).toBeTruthy()
+    expect(screen.getByText(/algo não saiu como esperado/i)).toBeTruthy()
 
-    const retryButton = screen.getByText('Tentar novamente')
+    const retryButton = screen.getByText(/tentar novamente/i)
     fireEvent.click(retryButton)
 
     // Após reset, o container deve ter resetado o checkpoint
-    expect(screen.getByText('Algo deu errado')).toBeTruthy()
+    expect(screen.getByText(/algo não saiu como esperado/i)).toBeTruthy()
   })
 })
 
