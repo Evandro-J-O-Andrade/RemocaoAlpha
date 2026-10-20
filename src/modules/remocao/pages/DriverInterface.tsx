@@ -88,7 +88,7 @@ export function DriverInterface({ remocaoId }: { remocaoId: string }) {
     await RemocaoService.registrarIntercorrencia({
       ...data,
       profissional_id: user.id,
-      profissional_nome: user.nome,
+      profissional_nome: user.username,
     })
     setShowIntercorrencia(false)
     window.location.reload()

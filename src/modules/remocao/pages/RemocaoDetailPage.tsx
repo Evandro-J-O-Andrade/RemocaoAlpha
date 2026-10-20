@@ -93,7 +93,7 @@ export function RemocaoDetailPage() {
 
   const handleIntercorrenciaSubmit = async (data: any) => {
     if (!user || !id) return
-    await RemocaoService.registrarIntercorrencia({ ...data, profissional_id: user.id, profissional_nome: user.nome })
+    await RemocaoService.registrarIntercorrencia({ ...data, profissional_id: user.id, profissional_nome: user.username })
     await RemocaoService.transicionarStatus(id, 'INTERCORRENCIA', user.id, user.tenant_id)
     window.location.reload()
   }

@@ -17,7 +17,7 @@ export function AccountPage() {
 
   useEffect(() => {
     if (user) {
-      setNome(user.nome || '')
+      setNome(user.username || '')
       setEmail(user.email || '')
     }
   }, [user])

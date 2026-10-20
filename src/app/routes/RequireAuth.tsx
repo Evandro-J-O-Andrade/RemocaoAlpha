@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import type { ReactNode } from 'react'
 import type { PermissionKey } from '@/modules/remocao/permissions'
@@ -7,19 +7,16 @@ import { LoadingAppPage } from '@/modules/remocao/pages/LoadingAppPage'
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading, stage } = useAuth()
-  const location = useLocation()
 
-  // Durante a validação inicial da sessão, mostra a tela de loading institucional
   if (loading && !user) {
     return <LoadingAppPage />
   }
 
   if (!user && stage === 'empty') {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" replace />
   }
 
-  // Força troca de senha no primeiro login
-  if (user?.password_reset_required && location.pathname !== '/change-password') {
+  if (user?.password_reset_required && window.location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />
   }
 
@@ -35,17 +32,40 @@ export function RequirePermission({
   permissions: PermissionKey | PermissionKey[]
   children: ReactNode
 }) {
-  const { user, loading } = useAuth()
-  const location = useLocation()
+  const { user, loading, status } = useAuth()
 
   if (loading || !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <LoadingAppPage />
+  }
+
+  if (status === 'no_tenant') {
+    return (
+      <FeedbackPage
+        variant="unauthorized"
+        title="Nenhuma organizacao vinculada"
+        description="Voce esta autenticado, mas nao possui vinculo com nenhuma organizacao. Solicite acesso a um administrador."
+        onHome={() => (window.location.href = '/')}
+      />
+    )
+  }
+
+  if (status === 'unauthorized') {
+    return (
+      <FeedbackPage
+        variant="forbidden"
+        title="Acesso negado"
+        description="Voce nao possui permissoes para acessar esta pagina."
+        onHome={() => (window.location.href = '/')}
+      />
+    )
   }
 
   if (!hasEffectivePermission(user.permissions, user.is_root, requiredPerms)) {
     return (
       <FeedbackPage
         variant="forbidden"
+        title="Acesso negado"
+        description="Voce nao possui permissao para acessar esta pagina."
         onHome={() => (window.location.href = '/')}
       />
     )

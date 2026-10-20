@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { supabase } from '@/lib/supabase/client'
 import { Header } from '@/modules/remocao/components/Header'
-import type { PermissionKey } from '@/modules/remocao/permissions'
+import { Perm } from '@/modules/remocao/permissions'
 
 interface Role {
   id: string
@@ -33,8 +33,8 @@ export function AdminManagementPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const canManage = (user?.permissions.includes('admin.users.manage' as PermissionKey)) ||
-                    (user?.permissions.includes('admin.roles.manage' as PermissionKey)) ||
+  const canManage = user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) ||
+                    user?.permissions.includes(Perm.ADMIN_ROLES_MANAGE) ||
                     user?.is_root
 
   useEffect(() => {

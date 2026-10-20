@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Menu, LogOut, User, Bell, Settings, ChevronLeft } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
 import { cn } from '@/lib/cn'
@@ -42,46 +43,43 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="auth-sidebar__nav">
-          <a
-            href="/"
+          <Link
+            to="/"
             className={cn('auth-sidebar__nav-item', sidebarOpen && 'auth-sidebar__nav-item--active')}
             onClick={() => {
               if (isMobile) setMobileMenuOpen(false)
-              setSidebarOpen(false)
             }}
           >
             <span className="auth-sidebar__nav-icon">
               <User size={18} />
             </span>
             {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
-          </a>
-          <a
-            href="/account"
+          </Link>
+          <Link
+            to="/account"
             className="auth-sidebar__nav-item"
             onClick={() => {
               if (isMobile) setMobileMenuOpen(false)
-              setSidebarOpen(false)
             }}
           >
             <span className="auth-sidebar__nav-icon">
               <User size={18} />
             </span>
             {sidebarOpen && <span className="auth-sidebar__nav-label">Minha Conta</span>}
-          </a>
+          </Link>
           {user?.is_root && (
-            <a
-              href="/admin"
-              className="auth-sidebar__nav-item"
-              onClick={() => {
-                if (isMobile) setMobileMenuOpen(false)
-                setSidebarOpen(false)
-              }}
-            >
+<Link
+            to="/admin"
+            className="auth-sidebar__nav-item"
+            onClick={() => {
+              if (isMobile) setMobileMenuOpen(false)
+            }}
+          >
               <span className="auth-sidebar__nav-icon">
                 <Settings size={18} />
               </span>
               {sidebarOpen && <span className="auth-sidebar__nav-label">Admin</span>}
-            </a>
+            </Link>
           )}
         </nav>
 
@@ -94,7 +92,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               {sidebarOpen && (
                 <>
                   <div className="auth-sidebar__user-name">
-                    {user?.nome || 'Usuario'}
+                    {user?.username || 'Usuario'}
                   </div>
                   <div className="auth-sidebar__user-role">
                     {user?.papel || 'carregando...'}
@@ -141,7 +139,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                 {sidebarOpen && (
                   <>
                     <div className="auth-header__user-name">
-                      {user?.nome || 'Usuario'}
+{user?.username || 'Usuario'}
                     </div>
                     <OrganizationSwitcher />
                   </>

@@ -31,7 +31,7 @@ export function Header() {
                 <User size={20} />
               </div>
               <div className="remocao-small">
-                <div className="font-medium">{user?.nome || 'Usuário'}</div>
+                <div className="font-medium">{user?.username || 'Usuário'}</div>
                 <OrganizationSwitcher />
                 <div className="remocao-text-muted">{user?.papel || 'carregando...'}</div>
               </div>

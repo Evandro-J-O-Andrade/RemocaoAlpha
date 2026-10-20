@@ -161,45 +161,38 @@ export function LoginPage() {
         {error && stage !== 'authenticating' && (
           <div className="login-feedback">
             <motion.div
+              key={`feedback-${error.stage}-${error.message}`}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="login-feedback__error"
             >
-              <span className="login-feedback__stage">{error.stage}</span>
-              {error.message}
-              {error.retryable && (
-                <button
-                  type="button"
-                  className="login-feedback__retry"
-                  onClick={() => {
-                    clearError()
-                    if (email && password) {
-                      void signIn(email, password)
-                    }
-                  }}
-                >
-                  Tentar novamente
-                </button>
+              {stage === 'empty' ? (
+                <span>{error.message}</span>
+              ) : (
+                <>
+                  <span className="login-feedback__stage">{error.stage}</span>
+                  {error.message}
+                  {error.retryable && (
+                    <button
+                      type="button"
+                      className="login-feedback__retry"
+                      onClick={() => {
+                        clearError()
+                        if (email && password) {
+                          void signIn(email, password)
+                        }
+                      }}
+                    >
+                      Tentar novamente
+                    </button>
+                  )}
+                </>
               )}
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      {stage === 'empty' && error && (
-        <AnimatePresence>
-          <div className="login-feedback">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="login-feedback__error"
-            >
-              {error.message}
-            </motion.div>
-          </div>
-        </AnimatePresence>
-      )}
 
       {/* Loading global — indicador compacto, centralizado na viewport inteira */}
       {isSubmitting && (
