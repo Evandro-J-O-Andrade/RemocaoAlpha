@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, AlertTriangle } from 'lucide-react'
 import { Header } from '@/modules/remocao/components/Header'
 import { StatePage } from '@/modules/remocao/components/StatePage'
 import { SolicitacaoRemocaoForm } from '@/modules/remocao/forms/SolicitacaoRemocaoForm'
-import { useSolicitarRemocao } from '@/modules/remocao/hooks/useRemocaoActions'
 import { useAuth } from '@/app/providers/AuthProvider'
 
 export function NovaRemocaoPage() {
@@ -38,15 +37,9 @@ export function NovaRemocaoPage() {
     )
   }
 
-  const { solicitar, loading, error: solicitacaoError } = useSolicitarRemocao()
-
   const handleSuccess = (remocaoId: string) => {
     setError(null)
     navigate(`/remocao/${remocaoId}`)
-  }
-
-  const handleError = (err: any) => {
-    setError(err?.message || 'Erro ao solicitar remoção. Tente novamente.')
   }
 
   return (
@@ -75,13 +68,6 @@ export function NovaRemocaoPage() {
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800 flex items-center gap-2">
             <AlertTriangle size={16} />
             {error}
-          </div>
-        )}
-
-        {solicitacaoError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800 flex items-center gap-2">
-            <AlertTriangle size={16} />
-            {solicitacaoError}
           </div>
         )}
 
