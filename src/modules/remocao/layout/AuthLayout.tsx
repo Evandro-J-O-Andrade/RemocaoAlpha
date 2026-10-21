@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Menu, User, ChevronLeft, LogOut } from 'lucide-react'
+import { Menu, User, ChevronLeft, LogOut, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
