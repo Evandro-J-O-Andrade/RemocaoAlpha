@@ -1,0 +1,41 @@
+-- Seed de teste do RemocaoAlpha — RASCUNHO DE REVISÃO
+-- Gerado em: 2026-10-21
+-- Status: DRAFT — NÃO APLICA NENHUMA ALTERAÇÃO NO BANCO.
+--
+-- Objetivo: dados sintéticos para validação do fluxo operacional completo.
+-- Tenant: Instituto Alpha de Medicina para Saúde (00000000-0000-0000-0000-000000000001)
+-- Unidades: Santos (matriz) e Poá (filial) — já existentes no banco.
+-- Destinos de referência: Hospital Guilherme Álvaro (principal),
+-- Hospital Regional de Ferraz de Vasconcelos (secundário).
+--
+-- Por que este arquivo está vazio de propósito:
+-- A versão anterior encerrava com "BEGIN; ... ROLLBACK;". Em um runner de
+-- migrations, o BEGIN é ignorado (a transação já existe) e o ROLLBACK aborta a
+-- transação do runner, o que faz a migration ser registrada como aplicada sem
+-- efeito real. O arquivo agora é inerte e serve de registro do desenho do seed.
+--
+-- O que precisa ser definido antes de escrever os INSERTs:
+-- 1. Pessoas fictícias (prefixo "SEED-"), com id em auth.users e people.
+--    people é referenciada por remocao_motorista(people_id) e remocao(created_by).
+-- 2. Motoristas fictícios (remocao_motorista), vinculados às pessoas acima.
+-- 3. Veículos — confirmar o nome da tabela antes de escrever:
+--      select table_name from information_schema.tables
+--      where table_schema = 'public' and table_name like '%veiculo%';
+-- 4. Remoções com jornada completa. Estados do enum remocao_status:
+--      SOLITADA -> EM_AVALIACAO -> AGUARDANDO_DESTINO -> DESTINO_CONFIRMADO
+--      -> AGUARDANDO_EQUIPE -> EQUIPE_CONFIRMADA -> AGUARDANDO_MOTORISTA
+--      -> MOTORISTA_CHECKIN -> MOTORISTA_CONFIRMADO -> CHECKLIST_PENDENTE
+--      -> PRONTA_PARA_SAIDA -> EM_DESLOCAMENTO -> CHEGADA_DESTINO
+--      -> PACIENTE_ENTREGUE -> RETORNANDO -> RETORNOU_UNIDADE -> ENCERRADA
+--      -> CANCELADA, SUSPENSA, INTERCORRENCIA, NAO_REALIZADA
+-- 5. Eventos de auditoria (remocao_evento).
+-- 6. Documentos de exemplo (remocao_documento) — o upload real deve ser
+--    testado separadamente, fora do seed.
+--
+-- Regras a respeitar quando o seed for escrito:
+-- - tenant_id fixado no tenant real (00000000-0000-0000-0000-000000000001).
+-- - RLS permanece ativo; o seed deve rodar com privilégio de dono das tabelas.
+-- - Nomes com prefixo "SEED-" e verificação prévia (idempotência).
+-- - Não duplicar pessoas reais nem atribuir usuários às duas unidades.
+
+select 1;
