@@ -403,6 +403,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStage('error')
       setStatus('error')
       setError(makeAuthError('authorizing', err.message || 'Falha ao alternar tenant', { retryable: true }))
+      throw err
     }
   }
 
