@@ -13,6 +13,12 @@
   --surface-elevated: #ffffff;
   --surface-muted: #f1f5f9;
 
+  /* Compatibility aliases used by shared Tailwind utilities */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface-elevated);
+  --muted: var(--surface-muted);
+
   /* Background */
   --bg: #f8fafc;
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -96,6 +102,11 @@ html.dark {
   --surface-alt: #273449;
   --surface-elevated: #273449;
   --surface-muted: #1e293b;
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface-elevated);
+  --muted: var(--surface-muted);
   --bg: #0f172a;
   --border: #33415b;
   --border-strong: #475569;
