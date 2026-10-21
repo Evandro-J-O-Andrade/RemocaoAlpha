@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { MapPin, User, Stethoscope, AlertCircle, Clock } from 'lucide-react'
+import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
 
@@ -52,6 +52,10 @@ export function SolicitacaoRemocaoForm({
   const [setoresOrigem, setSetoresOrigem] = useState<any[]>([])
   const [setoresDestino, setSetoresDestino] = useState<any[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [documentos, setDocumentos] = useState<File[]>([])
+  const [documentoTipo, setDocumentoTipo] = useState<'relatorio_medico' | 'documento_transferencia' | 'autorizacao_transferencia' | 'pedido_exame' | 'resultado_exame' | 'prescricao' | 'documento_administrativo' | 'outro'>('outro')
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitNotice, setSubmitNotice] = useState<string | null>(null)
 
   const {
     register,
@@ -105,6 +109,8 @@ export function SolicitacaoRemocaoForm({
 
   const onSubmit = async (data: SolicitacaoFormValues) => {
     setSubmitting(true)
+    setSubmitError(null)
+    setSubmitNotice(null)
     const pacientePrecaucoes = JSON.stringify(data.paciente_precaucoes)
     const pacienteAlergias = JSON.stringify(data.paciente_alergias)
 
@@ -137,13 +143,35 @@ export function SolicitacaoRemocaoForm({
       horario_previsto_atendimento: data.horario_previsto_atendimento,
     })
 
-    setSubmitting(false)
-
-    if (result.error) {
-      console.error(result.error)
-    } else if (result.data && onSuccess) {
-      onSuccess(result.data.id)
+    if (result.error || !result.data) {
+      setSubmitting(false)
+      setSubmitError(result.error?.message || 'Não foi possível criar a solicitação. Confira os dados e tente novamente.')
+      return
     }
+
+    if (documentos.length > 0) {
+      const uploadErrors: string[] = []
+      for (const file of documentos) {
+        const upload = await RemocaoRepository.uploadDocumento(
+          result.data.id,
+          tenantId,
+          file,
+          documentoTipo,
+          file.name,
+        )
+        if (upload.error) uploadErrors.push(`${file.name}: ${upload.error.message}`)
+      }
+
+      if (uploadErrors.length > 0) {
+        setSubmitting(false)
+        setSubmitError(`A remoção foi criada, mas nem todos os documentos foram enviados. ${uploadErrors.join(' | ')}. Abra a remoção criada e tente anexar os arquivos pendentes.`)
+        setSubmitNotice(`Solicitação ${result.data.numero || result.data.id} criada. Verifique os documentos pendentes antes de continuar.`)
+        return
+      }
+    }
+
+    setSubmitting(false)
+    if (onSuccess) onSuccess(result.data.id)
   }
 
   const handleSubmitForm = handleSubmit(onSubmit as any)
@@ -371,6 +399,88 @@ export function SolicitacaoRemocaoForm({
           </div>
         </div>
       </fieldset>
+
+      {/* Documents */}
+      <fieldset className="border rounded-lg p-4">
+        <legend className="px-2 text-sm font-medium flex items-center gap-2">
+          <FileUp size={16} /> Documentos da solicitação
+        </legend>
+        <p className="text-sm text-muted-foreground mb-3">
+          Anexe FFA, laudos, pedidos e resultados de exames. Os arquivos serão enviados ao armazenamento privado após a criação da solicitação.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Categoria do documento</label>
+            <select
+              value={documentoTipo}
+              onChange={(event) => setDocumentoTipo(event.target.value as typeof documentoTipo)}
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded"
+            >
+              <option value="relatorio_medico">Relatório médico / FFA</option>
+              <option value="documento_transferencia">Documento de transferência</option>
+              <option value="autorizacao_transferencia">Autorização de transferência</option>
+              <option value="pedido_exame">Pedido de exame</option>
+              <option value="resultado_exame">Resultado de exame / ECG / RX</option>
+              <option value="prescricao">Prescrição</option>
+              <option value="documento_administrativo">Documento administrativo</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Selecionar arquivos</label>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+              disabled={submitting}
+              onChange={(event) => {
+                const incoming = Array.from(event.target.files || [])
+                const valid: File[] = []
+                const rejected: string[] = []
+                for (const file of incoming) {
+                  if (!['application/pdf', 'image/png', 'image/jpeg'].includes(file.type)) {
+                    rejected.push(`${file.name}: formato não permitido`)
+                  } else if (file.size <= 0 || file.size > 20 * 1024 * 1024) {
+                    rejected.push(`${file.name}: o arquivo deve ter até 20 MB`)
+                  } else {
+                    valid.push(file)
+                  }
+                }
+                setDocumentos((current) => [...current, ...valid].filter((file, index, all) =>
+                  all.findIndex((candidate) => candidate.name === file.name && candidate.size === file.size && candidate.lastModified === file.lastModified) === index
+                ))
+                setSubmitError(rejected.length ? rejected.join(' • ') : null)
+                event.target.value = ''
+              }}
+              className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-2 file:text-foreground"
+            />
+            <p className="text-xs text-muted-foreground mt-1">PDF, JPG ou PNG · até 20 MB por arquivo.</p>
+          </div>
+        </div>
+        {documentos.length > 0 && (
+          <ul className="mt-3 divide-y divide-border rounded border border-border">
+            {documentos.map((file, index) => (
+              <li key={`${file.name}-${file.size}-${file.lastModified}`} className="flex items-center gap-2 px-3 py-2 text-sm">
+                <FileText size={16} className="shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                <button
+                  type="button"
+                  aria-label={`Remover ${file.name}`}
+                  disabled={submitting}
+                  onClick={() => setDocumentos((current) => current.filter((_, fileIndex) => fileIndex !== index))}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                >
+                  <X size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
+
+      {submitError && <div role="alert" className="rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">{submitError}</div>}
+      {submitNotice && <div role="status" className="rounded border border-border bg-muted px-3 py-2 text-sm text-foreground">{submitNotice}</div>}
 
       {/* Submit */}
       <div className="flex justify-end gap-3 pt-4 border-t">
