@@ -367,8 +367,8 @@ export function AdminManagementPage() {
               <header className="remocao-admin-modal__header">
                 <div>
                   <p className="remocao-eyebrow">GESTÃO DE ACESSO</p>
-                  <h2 id="edit-user-title">Editar usuário</h2>
-                  <p>Atualize a identificação e, quando autorizado, a função deste vínculo.</p>
+                  <h2 id="edit-user-title">Editar função do usuário</h2>
+                  <p>Altere a função atribuída a este vínculo, respeitando sua permissão e hierarquia.</p>
                 </div>
                 <button type="button" className="remocao-btn remocao-btn--ghost remocao-btn--icon" aria-label="Fechar edição" disabled={editSaving} onClick={() => setEditing(null)}>
                   <X size={18} />
