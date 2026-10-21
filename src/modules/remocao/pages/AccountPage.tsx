@@ -65,6 +65,7 @@ export function AccountPage() {
 
       await refreshUser()
       setNome(normalizedName)
+      if (emailPending) setEmail(normalizedEmail)
       setSuccess(
         emailPending
           ? 'Nome atualizado. A alteração do e-mail foi solicitada; confirme a mensagem enviada pelo Supabase para concluir a troca.'
