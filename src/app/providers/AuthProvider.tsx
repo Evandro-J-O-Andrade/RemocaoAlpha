@@ -63,6 +63,7 @@ interface AuthContextType {
   error: AuthErrorInfo | null
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  refreshUser: () => Promise<void>
   checkPasswordReset: () => Promise<boolean>
   requestPasswordReset: (currentPassword: string, newPassword: string) => Promise<void>
   clearError: () => void
@@ -331,6 +332,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadUser(session.user.id, session.user.email ?? null)
   }
 
+  const refreshUser = async () => {
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+    if (authError) throw authError
+    if (!authUser) throw new Error('Não há uma sessão autenticada para atualizar o perfil.')
+    await loadUser(authUser.id, authUser.email ?? null)
+  }
+
   const signOut = async () => {
     setStage('idle')
     setStatus('loading')
@@ -409,13 +417,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       signIn,
       signOut,
+      refreshUser,
       checkPasswordReset,
       requestPasswordReset,
       clearError,
       setActiveTenant,
       memberships: user?.memberships || [],
     }),
-    [user, loading, stage, status, error, signIn, signOut, checkPasswordReset, requestPasswordReset, clearError, setActiveTenant]
+    [user, loading, stage, status, error, signIn, signOut, refreshUser, checkPasswordReset, requestPasswordReset, clearError, setActiveTenant]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
