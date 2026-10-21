@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X } from 'lucide-react'
+import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X, Paperclip } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
 
@@ -44,9 +44,11 @@ export type SolicitacaoFormValues = z.infer<typeof solicitacaoSchema>
 export function SolicitacaoRemocaoForm({
   tenantId,
   onSuccess,
+  onCancel,
 }: {
   tenantId: string
   onSuccess?: (remocaoId: string) => void
+  onCancel?: () => void
 }) {
   const [unidades, setUnidades] = useState<any[]>([])
   const [setoresOrigem, setSetoresOrigem] = useState<any[]>([])
@@ -56,11 +58,13 @@ export function SolicitacaoRemocaoForm({
   const [documentoTipo, setDocumentoTipo] = useState<'relatorio_medico' | 'documento_transferencia' | 'autorizacao_transferencia' | 'pedido_exame' | 'resultado_exame' | 'prescricao' | 'documento_administrativo' | 'outro'>('outro')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitNotice, setSubmitNotice] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<SolicitacaoFormValues>({
     resolver: zodResolver(solicitacaoSchema) as any,
@@ -176,11 +180,23 @@ export function SolicitacaoRemocaoForm({
 
   const handleSubmitForm = handleSubmit(onSubmit as any)
 
+  const handleCancel = () => {
+    if (submitting) return
+    if (onCancel) {
+      onCancel()
+      return
+    }
+    reset()
+    setDocumentos([])
+    setSubmitError(null)
+    setSubmitNotice(null)
+  }
+
   return (
     <form onSubmit={handleSubmitForm} className="space-y-6">
       {/* Patient section */}
       <fieldset className="border rounded-lg p-4">
-        <legend className="px-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+        <legend className="px-2 text-sm font-medium text-foreground flex items-center gap-2">
           <User size={16} /> Dados do Paciente
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -189,22 +205,22 @@ export function SolicitacaoRemocaoForm({
             <input
               type="text"
               {...register('paciente_nome')}
-              className={`w-full px-3 py-2 border rounded ${errors.paciente_nome ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full px-3 py-2 border rounded ${errors.paciente_nome ? 'border-destructive' : 'border-border'}`}
               placeholder="Nome completo"
             />
-            {errors.paciente_nome && <span className="text-xs text-red-500">{errors.paciente_nome.message}</span>}
+            {errors.paciente_nome && <span className="text-xs text-destructive">{errors.paciente_nome.message}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Prontuário</label>
-            <input type="text" {...register('paciente_prontuario')} className="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Número do prontuário" />
+            <input type="text" {...register('paciente_prontuario')} className="w-full px-3 py-2 border border-border rounded" placeholder="Número do prontuário" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Data de nascimento</label>
-            <input type="date" {...register('paciente_data_nascimento')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="date" {...register('paciente_data_nascimento')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Sexo</label>
-            <select {...register('paciente_sexo')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('paciente_sexo')} className="w-full px-3 py-2 border border-border rounded">
               <option value="">Selecione</option>
               <option value="masculino">Masculino</option>
               <option value="feminino">Feminino</option>
@@ -213,7 +229,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Diagnóstico</label>
-            <input type="text" {...register('paciente_diagnostico')} className="w-full px-3 py-2 border border-gray-300 rounded" placeholder="CID + descrição" />
+            <input type="text" {...register('paciente_diagnostico')} className="w-full px-3 py-2 border border-border rounded" placeholder="CID + descrição" />
           </div>
         </div>
 
@@ -224,7 +240,7 @@ export function SolicitacaoRemocaoForm({
           </label>
           <select
             {...register('paciente_condicao_clinica')}
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-border rounded"
           >
             <option value="estavel">Estável</option>
             <option value="instavel">Instável</option>
@@ -238,25 +254,25 @@ export function SolicitacaoRemocaoForm({
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Precauções / Isolamento</label>
-            <input type="text" {...register('paciente_precaucoes')} className="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Digite e pressione Enter para adicionar" />
+            <input type="text" {...register('paciente_precaucoes')} className="w-full px-3 py-2 border border-border rounded" placeholder="Digite e pressione Enter para adicionar" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Alergias</label>
-            <input type="text" {...register('paciente_alergias')} className="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Digite e pressione Enter para adicionar" />
+            <input type="text" {...register('paciente_alergias')} className="w-full px-3 py-2 border border-border rounded" placeholder="Digite e pressione Enter para adicionar" />
           </div>
         </div>
       </fieldset>
 
       {/* Origin & Destination */}
       <fieldset className="border rounded-lg p-4">
-        <legend className="px-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+        <legend className="px-2 text-sm font-medium text-foreground flex items-center gap-2">
           <MapPin size={16} /> Origem e Destino
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Origin */}
           <div>
             <label className="block text-sm font-medium mb-1">Unidade de origem</label>
-            <select {...register('origem_unidade_id')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('origem_unidade_id')} className="w-full px-3 py-2 border border-border rounded">
               <option value="">Selecione</option>
               {unidades.map((u) => (
                 <option key={u.id} value={u.id}>{u.nome}</option>
@@ -265,7 +281,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Setor de origem</label>
-            <select {...register('origem_setor_id')} className="w-full px-3 py-2 border border-gray-300 rounded" disabled={!origemUnidade}>
+            <select {...register('origem_setor_id')} className="w-full px-3 py-2 border border-border rounded" disabled={!origemUnidade}>
               <option value="">Selecione</option>
               {setoresOrigem.map((s) => (
                 <option key={s.id} value={s.id}>{s.nome}</option>
@@ -274,13 +290,13 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Leito</label>
-            <input type="text" {...register('origem_leito')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="text" {...register('origem_leito')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
 
           {/* Destination */}
           <div>
             <label className="block text-sm font-medium mb-1">Unidade de destino</label>
-            <select {...register('destino_unidade_id')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('destino_unidade_id')} className="w-full px-3 py-2 border border-border rounded">
               <option value="">Selecione</option>
               {unidades.filter((u) => u.id !== origemUnidade).map((u) => (
                 <option key={u.id} value={u.id}>{u.nome}</option>
@@ -289,7 +305,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Setor de destino</label>
-            <select {...register('destino_setor_id')} className="w-full px-3 py-2 border border-gray-300 rounded" disabled={!destinoUnidade}>
+            <select {...register('destino_setor_id')} className="w-full px-3 py-2 border border-border rounded" disabled={!destinoUnidade}>
               <option value="">Selecione</option>
               {setoresDestino.map((s) => (
                 <option key={s.id} value={s.id}>{s.nome}</option>
@@ -298,18 +314,18 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Endereço (se externo)</label>
-            <input type="text" {...register('destino_endereco')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="text" {...register('destino_endereco')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
         </div>
       </fieldset>
 
       {/* Purpose & Classification */}
       <fieldset className="border rounded-lg p-4">
-        <legend className="px-2 text-sm font-medium text-gray-700">Finalidade & Classificação</legend>
+        <legend className="px-2 text-sm font-medium text-foreground">Finalidade & Classificação</legend>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Finalidade *</label>
-            <select {...register('finalidade')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('finalidade')} className="w-full px-3 py-2 border border-border rounded">
               <option value="exame">Exame externo</option>
               <option value="procedimento">Procedimento</option>
               <option value="consulta">Consulta</option>
@@ -323,7 +339,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Prioridade *</label>
-            <select {...register('prioridade')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('prioridade')} className="w-full px-3 py-2 border border-border rounded">
               <option value="rotina">Rotina</option>
               <option value="urgente">Urgente</option>
               <option value="emergencial">Emergencial</option>
@@ -331,7 +347,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de transporte</label>
-            <select {...register('tipo_transporte')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('tipo_transporte')} className="w-full px-3 py-2 border border-border rounded">
               <option value="">Automático</option>
               <option value="simple">Simples/eletiva</option>
               <option value="basico">Suporte básico</option>
@@ -342,7 +358,7 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Nível de suporte</label>
-            <select {...register('nivel_suporte')} className="w-full px-3 py-2 border border-gray-300 rounded">
+            <select {...register('nivel_suporte')} className="w-full px-3 py-2 border border-border rounded">
               <option value="">Automático</option>
               <option value="basico">Básico</option>
               <option value="intermediario">Intermediário</option>
@@ -359,7 +375,7 @@ export function SolicitacaoRemocaoForm({
           <div className="flex gap-4">
             {(['obrigatorio', 'solicitado', 'dispensado', 'nao_disponivel', 'nao_necessario'] as const).map((val) => (
               <label key={val} className="flex items-center gap-2">
-                <input type="radio" {...register('necessidade_medica')} value={val} className="text-blue-600" />
+                <input type="radio" {...register('necessidade_medica')} value={val} className="text-primary" />
                 <span className="text-sm capitalize">{val.replace('_', ' ')}</span>
               </label>
             ))}
@@ -371,7 +387,7 @@ export function SolicitacaoRemocaoForm({
             <label className="block text-sm font-medium mb-1">Justificativa médica *</label>
             <textarea
               {...register('justificativa_medica')}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
+              className="w-full px-3 py-2 border border-border rounded"
               rows={2}
               placeholder="Descreva a necessidade ou a razão do acompanhamento médico"
             />
@@ -381,21 +397,21 @@ export function SolicitacaoRemocaoForm({
 
       {/* Scheduling */}
       <fieldset className="border rounded-lg p-4">
-        <legend className="px-2 text-sm font-medium text-gray-700 flex items-center gap-2">
+        <legend className="px-2 text-sm font-medium text-foreground flex items-center gap-2">
           <Clock size={16} /> Agendamento
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Data prevista</label>
-            <input type="date" {...register('data_prevista')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="date" {...register('data_prevista')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Horário previsto de saída</label>
-            <input type="time" {...register('horario_previsto_saida')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="time" {...register('horario_previsto_saida')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Horário previsto do atendimento</label>
-            <input type="time" {...register('horario_previsto_atendimento')} className="w-full px-3 py-2 border border-gray-300 rounded" />
+            <input type="time" {...register('horario_previsto_atendimento')} className="w-full px-3 py-2 border border-border rounded" />
           </div>
         </div>
       </fieldset>
@@ -429,6 +445,7 @@ export function SolicitacaoRemocaoForm({
           <div>
             <label className="block text-sm font-medium mb-1">Selecionar arquivos</label>
             <input
+              ref={fileInputRef}
               type="file"
               multiple
               accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
@@ -452,9 +469,20 @@ export function SolicitacaoRemocaoForm({
                 setSubmitError(rejected.length ? rejected.join(' • ') : null)
                 event.target.value = ''
               }}
-              className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-2 file:text-foreground"
+              className="sr-only"
             />
-            <p className="text-xs text-muted-foreground mt-1">PDF, JPG ou PNG · até 20 MB por arquivo.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Paperclip size={16} />
+                Adicionar documentos
+              </button>
+              <p className="text-xs text-muted-foreground">PDF, JPG ou PNG · até 20 MB por arquivo.</p>
+            </div>
           </div>
         </div>
         {documentos.length > 0 && (
@@ -483,16 +511,22 @@ export function SolicitacaoRemocaoForm({
       {submitNotice && <div role="status" className="rounded border border-border bg-muted px-3 py-2 text-sm text-foreground">{submitNotice}</div>}
 
       {/* Submit */}
-      <div className="flex justify-end gap-3 pt-4 border-t">
-        <button type="button" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+      <div className="sticky bottom-0 z-10 -mx-1 flex flex-col-reverse gap-2 border-t border-border bg-background/95 px-1 py-4 backdrop-blur sm:flex-row sm:justify-end sm:gap-3">
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={submitting}
+          className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? 'Salvando...' : 'Solicitar Remoção'}
+          {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />}
+          {submitting ? 'Salvando solicitação…' : 'Solicitar remoção'}
         </button>
       </div>
     </form>
