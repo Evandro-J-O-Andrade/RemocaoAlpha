@@ -974,6 +974,7 @@ export interface Database {
           id: string
           tenant_id: string
           person_id: string
+          role_id: string
           papel: string
           status: Database['public']['Enums']['remocao_people_status'] | null
           aprovado_em?: string | null
@@ -985,6 +986,7 @@ export interface Database {
           id?: string
           tenant_id: string
           person_id: string
+          role_id: string
           papel: string
           status?: Database['public']['Enums']['remocao_people_status'] | null
           aprovado_em?: string | null
