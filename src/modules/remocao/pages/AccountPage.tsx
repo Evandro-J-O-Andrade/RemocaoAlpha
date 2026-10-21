@@ -8,7 +8,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function AccountPage() {
-  const { user, signOut, loading, refreshUser } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')

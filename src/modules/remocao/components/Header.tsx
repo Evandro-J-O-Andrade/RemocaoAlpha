@@ -1,4 +1,3 @@
-import { User } from 'lucide-react'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
 
 export function Header() {
