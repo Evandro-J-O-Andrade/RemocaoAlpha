@@ -81,7 +81,7 @@ export function AdminManagementPage() {
         setMemberships((data as TenantMembership[]) || [])
         setTotalCount(count || 0)
       } else if (currentTab === 'roles') {
-        const { data, error: err } = await supabase
+        const { data, error: err, count } = await supabase
           .from('roles')
           .select('*', { count: 'exact' })
           .order('nivel', { ascending: false })
@@ -250,7 +250,7 @@ export function AdminManagementPage() {
                     <th>Criado em</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {tenants.map((t) => (
                     <tr key={t.id}>
                       <td><span className="remocao-table__primary">{t.nome}</span></td>
@@ -283,7 +283,7 @@ export function AdminManagementPage() {
               className="remocao-btn remocao-btn--sm remocao-btn--ghost"
             >Próxima</button>
           </div>
-        </footer>>
+        </footer>
       </div>
     </div>
   )
