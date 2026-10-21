@@ -90,7 +90,7 @@ export function AdminManagementPage() {
         setRoles((data as Role[]) || [])
         setTotalCount(count || 0)
       } else if (currentTab === 'tenants') {
-        const { data, error: err } = await supabase
+        const { data, error: err, count } = await supabase
           .from('tenants')
           .select('id, nome, razao_social, cnpj, email, ativo, created_at', { count: 'exact' })
           .order('nome', { ascending: true })
