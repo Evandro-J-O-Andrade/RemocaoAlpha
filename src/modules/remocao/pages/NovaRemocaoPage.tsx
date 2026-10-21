@@ -155,7 +155,7 @@ export function NovaRemocaoPage() {
                 <h2 className="text-sm font-bold text-foreground">Etapas do registro</h2>
               </div>
               <ol className="mt-4 space-y-4">
-                {workflow.map(({ icon: Icon, title, description }, index) => (
+                {workflow.map(({ icon: Icon, title, description }) => (
                   <li key={title} className="flex gap-3">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-muted-foreground">
                       <Icon size={16} />
