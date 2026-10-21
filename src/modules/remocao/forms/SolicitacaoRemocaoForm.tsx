@@ -45,10 +45,12 @@ export function SolicitacaoRemocaoForm({
   tenantId,
   onSuccess,
   onCancel,
+  onError,
 }: {
   tenantId: string
   onSuccess?: (remocaoId: string) => void
   onCancel?: () => void
+  onError?: (message: string) => void
 }) {
   const [unidades, setUnidades] = useState<any[]>([])
   const [setoresOrigem, setSetoresOrigem] = useState<any[]>([])
@@ -116,68 +118,78 @@ export function SolicitacaoRemocaoForm({
     setSubmitting(true)
     setSubmitError(null)
     setSubmitNotice(null)
-    const pacientePrecaucoes = JSON.stringify(data.paciente_precaucoes)
-    const pacienteAlergias = JSON.stringify(data.paciente_alergias)
 
-    const result = await RemocaoRepository.create({
-      tenant_id: tenantId,
-      paciente_nome: data.paciente_nome,
-      paciente_prontuario: data.paciente_prontuario,
-      paciente_data_nascimento: data.paciente_data_nascimento,
-      paciente_sexo: data.paciente_sexo || null,
-      paciente_diagnostico: data.paciente_diagnostico,
-      paciente_condicao_clinica: data.paciente_condicao_clinica,
-      paciente_precaucoes: pacientePrecaucoes,
-      paciente_alergias: pacienteAlergias,
-      paciente_necessidades_especiais: data.paciente_necessidades_especiais,
-      origem_unidade_id: data.origem_unidade_id,
-      origem_setor_id: data.origem_setor_id,
-      origem_leito: data.origem_leito,
-      destino_unidade_id: data.destino_unidade_id,
-      destino_endereco: data.destino_endereco,
-      destino_contato_nome: data.destino_contato_nome,
-      destino_contato_telefone: data.destino_contato_telefone,
-      finalidade: data.finalidade,
-      prioridade: data.prioridade,
-      tipo_transporte: data.tipo_transporte,
-      nivel_suporte: data.nivel_suporte,
-      necessidade_medica: data.necessidade_medica,
-      justificativa_medica: data.justificativa_medica,
-      data_prevista: data.data_prevista,
-      horario_previsto_saida: data.horario_previsto_saida,
-      horario_previsto_atendimento: data.horario_previsto_atendimento,
-    })
+    try {
+      const result = await RemocaoRepository.create({
+        tenant_id: tenantId,
+        paciente_nome: data.paciente_nome,
+        paciente_prontuario: data.paciente_prontuario,
+        paciente_data_nascimento: data.paciente_data_nascimento,
+        paciente_sexo: data.paciente_sexo || null,
+        paciente_diagnostico: data.paciente_diagnostico,
+        paciente_condicao_clinica: data.paciente_condicao_clinica,
+        paciente_precaucoes: JSON.stringify(data.paciente_precaucoes),
+        paciente_alergias: JSON.stringify(data.paciente_alergias),
+        paciente_necessidades_especiais: data.paciente_necessidades_especiais,
+        origem_unidade_id: data.origem_unidade_id,
+        origem_setor_id: data.origem_setor_id,
+        origem_leito: data.origem_leito,
+        destino_unidade_id: data.destino_unidade_id,
+        destino_setor_id: data.destino_setor_id,
+        destino_endereco: data.destino_endereco,
+        destino_contato_nome: data.destino_contato_nome,
+        destino_contato_telefone: data.destino_contato_telefone,
+        finalidade: data.finalidade,
+        prioridade: data.prioridade,
+        tipo_transporte: data.tipo_transporte,
+        nivel_suporte: data.nivel_suporte,
+        necessidade_medica: data.necessidade_medica,
+        justificativa_medica: data.justificativa_medica,
+        data_prevista: data.data_prevista,
+        horario_previsto_saida: data.horario_previsto_saida,
+        horario_previsto_atendimento: data.horario_previsto_atendimento,
+      })
 
-    if (result.error || !result.data) {
-      setSubmitting(false)
-      setSubmitError(result.error?.message || 'Não foi possível criar a solicitação. Confira os dados e tente novamente.')
-      return
-    }
-
-    if (documentos.length > 0) {
-      const uploadErrors: string[] = []
-      for (const file of documentos) {
-        const upload = await RemocaoRepository.uploadDocumento(
-          result.data.id,
-          tenantId,
-          file,
-          documentoTipo,
-          file.name,
-        )
-        if (upload.error) uploadErrors.push(`${file.name}: ${upload.error.message}`)
-      }
-
-      if (uploadErrors.length > 0) {
-        setCreatedRemocaoId(result.data.id)
-        setSubmitting(false)
-        setSubmitError(`A remoção foi criada, mas nem todos os documentos foram enviados. ${uploadErrors.join(' | ')}. Abra a remoção criada e tente anexar os arquivos pendentes.`)
-        setSubmitNotice(`Solicitação ${result.data.numero || result.data.id} criada. Verifique os documentos pendentes antes de continuar.`)
+      if (result.error || !result.data) {
+        const message = result.error?.message || 'Não foi possível criar a solicitação. Confira os dados e tente novamente.'
+        setSubmitError(message)
+        onError?.(message)
         return
       }
-    }
 
-    setSubmitting(false)
-    if (onSuccess) onSuccess(result.data.id)
+      if (documentos.length > 0) {
+        const uploadErrors: string[] = []
+        for (const file of documentos) {
+          const upload = await RemocaoRepository.uploadDocumento(
+            result.data.id,
+            tenantId,
+            file,
+            documentoTipo,
+            file.name,
+          )
+          if (upload.error) uploadErrors.push(`${file.name}: ${upload.error.message}`)
+        }
+
+        if (uploadErrors.length > 0) {
+          setCreatedRemocaoId(result.data.id)
+          const message = `A solicitação foi criada, mas nem todos os documentos foram enviados. ${uploadErrors.join(' | ')}. Abra a solicitação criada e tente anexar os arquivos pendentes.`
+          setSubmitError(message)
+          setSubmitNotice(`Solicitação ${result.data.numero || result.data.id} criada. Verifique os documentos pendentes antes de continuar.`)
+          onError?.(message)
+          return
+        }
+      }
+
+      setCreatedRemocaoId(null)
+      onSuccess?.(result.data.id)
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Erro inesperado ao salvar a solicitação.'
+      const message = `Não foi possível concluir a operação. ${detail}`
+      setSubmitError(message)
+      onError?.(message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleSubmitForm = handleSubmit(onSubmit as any)
