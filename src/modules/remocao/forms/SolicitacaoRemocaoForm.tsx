@@ -50,7 +50,7 @@ export function SolicitacaoRemocaoForm({
   tenantId: string
   onSuccess?: (remocaoId: string) => void
   onCancel?: () => void
-  onError?: (message: string) => void
+  onError?: (message: string | null) => void
 }) {
   const [unidades, setUnidades] = useState<any[]>([])
   const [setoresOrigem, setSetoresOrigem] = useState<any[]>([])
@@ -118,6 +118,7 @@ export function SolicitacaoRemocaoForm({
     setSubmitting(true)
     setSubmitError(null)
     setSubmitNotice(null)
+    onError?.(null)
 
     try {
       const result = await RemocaoRepository.create({
