@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Pencil, Save, X } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { supabase } from '@/lib/supabase/client'
@@ -54,6 +54,7 @@ export function AdminManagementPage() {
   const [editing, setEditing] = useState<TenantMembership | null>(null)
   const [editName, setEditName] = useState('')
   const [editRoleId, setEditRoleId] = useState('')
+  const [assignableRoles, setAssignableRoles] = useState<Role[]>([])
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -120,20 +121,18 @@ export function AdminManagementPage() {
     setEditing(membership)
     setEditName(membership.person?.nome || '')
     setEditRoleId(membership.role_id || '')
-    if (roles.length === 0) {
-      const { data, error: rolesError } = await supabase
-        .from('roles')
-        .select('id, key, nome, descricao, nivel, sistema')
-        .order('nivel', { ascending: false })
-      if (rolesError) {
-        setEditError('Não foi possível carregar as funções disponíveis.')
-        return
-      }
-      setRoles((data as Role[]) || [])
+    const { data, error: rolesError } = await supabase
+      .from('roles')
+      .select('id, key, nome, descricao, nivel, sistema')
+      .order('nivel', { ascending: false })
+    if (rolesError) {
+      setEditError('Não foi possível carregar as funções disponíveis.')
+      return
     }
+    setAssignableRoles((data as Role[]) || [])
   }
 
-  const handleSaveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!editing || !user) return
     const normalizedName = editName.trim()
@@ -142,9 +141,10 @@ export function AdminManagementPage() {
       return
     }
 
-    const selectedRole = roles.find((role) => role.id === editRoleId)
-    if (canAssignRoles && !selectedRole) {
-      setEditError('Selecione uma função válida.')
+    const selectedRole = assignableRoles.find((role) => role.id === editRoleId)
+    const roleChanged = Boolean(editRoleId && editRoleId !== editing.role_id)
+    if (canAssignRoles && roleChanged && !selectedRole) {
+      setEditError('A função selecionada não está disponível para atribuição.')
       return
     }
     if (canAssignRoles && selectedRole?.key === 'admin_master' && !user.is_root) {
@@ -168,9 +168,9 @@ export function AdminManagementPage() {
         throw new Error('O nome não foi atualizado. Verifique suas permissões e tente novamente.')
       }
 
-      if (canAssignRoles && selectedRole && selectedRole.id !== editing.role_id) {
+      if (canAssignRoles && roleChanged && selectedRole) {
         if (!user.is_root) {
-          const ownRole = roles.find((role) => role.key === user.papel)
+          const ownRole = assignableRoles.find((role) => role.key === user.papel)
           if (ownRole && selectedRole.nivel >= ownRole.nivel) {
             throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
           }
@@ -403,7 +403,7 @@ export function AdminManagementPage() {
                     onChange={(event) => setEditRoleId(event.target.value)}
                     disabled={!canAssignRoles || editing.person_id === user?.id || editing.papel === 'admin_master' || !roles.length}
                   >
-                    {roles.filter((role) => user?.is_root || (!role.sistema && role.key !== 'admin_master' && role.nivel < (roles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER))).map((role) => (
+                    {assignableRoles.filter((role) => role.id === editing.role_id || user?.is_root || (!role.sistema && role.key !== 'admin_master' && role.nivel < (assignableRoles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER))).map((role) => (
                       <option key={role.id} value={role.id}>{role.nome} · nível {role.nivel}</option>
                     ))}
                   </select>
