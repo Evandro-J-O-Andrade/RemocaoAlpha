@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { KeyRound, LogOut, Save, ShieldCheck, UserRound } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { supabase } from '@/lib/supabase/client'
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
 
 export function AccountPage() {
-  const { user, signOut, loading } = useAuth()
+  const { user, signOut, loading, refreshUser } = useAuth()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
@@ -16,44 +20,79 @@ export function AccountPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) {
-      setNome(user.username || '')
-      setEmail(user.email || '')
-    }
-  }, [user])
-
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
     if (!user) return
+    setNome(user.username || '')
+    setEmail(user.email || '')
+  }, [user?.id, user?.username, user?.email])
+
+  const handleProfileUpdate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!user) return
+
+    const normalizedName = nome.trim()
+    const normalizedEmail = email.trim().toLowerCase()
+    if (normalizedName.length < 2) {
+      setError('Informe um nome com pelo menos 2 caracteres.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('Informe um e-mail válido.')
+      return
+    }
+
     setSaving(true)
     setError(null)
     setSuccess(null)
     try {
-      const { error: updateError } = await supabase
+      const { data: updatedPerson, error: nameError } = await supabase
         .from('people')
-        .update({ nome })
+        .update({ nome: normalizedName })
         .eq('id', user.id)
-      if (updateError) throw updateError
-      setSuccess('Perfil atualizado com sucesso')
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar perfil')
+        .select('id')
+        .maybeSingle()
+
+      if (nameError) throw nameError
+      if (!updatedPerson) {
+        throw new Error('O perfil não foi atualizado. Verifique suas permissões de acesso e tente novamente.')
+      }
+
+      let emailPending = false
+      if (normalizedEmail !== user.email.trim().toLowerCase()) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: normalizedEmail })
+        if (emailError) throw emailError
+        emailPending = true
+      }
+
+      await refreshUser()
+      setNome(normalizedName)
+      setSuccess(
+        emailPending
+          ? 'Nome atualizado. A alteração do e-mail foi solicitada; confirme a mensagem enviada pelo Supabase para concluir a troca.'
+          : 'Dados do perfil atualizados com sucesso.',
+      )
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Não foi possível atualizar o perfil.'))
     } finally {
       setSaving(false)
     }
   }
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('Todos os campos são obrigatórios')
+      setError('Preencha todos os campos de senha.')
       return
     }
     if (newPassword.length < 8) {
-      setError('A nova senha deve ter pelo menos 8 caracteres')
+      setError('A nova senha deve ter pelo menos 8 caracteres.')
       return
     }
     if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem')
+      setError('A confirmação da senha não corresponde.')
+      return
+    }
+    if (!user?.email) {
+      setError('Não foi possível validar a conta atual. Entre novamente e tente de novo.')
       return
     }
 
@@ -61,146 +100,150 @@ export function AccountPage() {
     setError(null)
     setSuccess(null)
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
       })
+      if (verifyError) throw new Error('A senha atual não confere.')
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
       if (updateError) throw updateError
-      setSuccess('Senha alterada com sucesso')
+      setSuccess('Senha alterada com sucesso.')
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-    } catch (err: any) {
-      setError(err.message || 'Erro ao alterar senha')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Não foi possível alterar a senha.'))
     } finally {
       setPasswordSaving(false)
     }
   }
 
-  if (loading) return <div>Carregando...</div>
+  if (loading) {
+    return (
+      <div className="remocao-module">
+        <div className="remocao-page">
+          <div className="remocao-loading" role="status">
+            <span className="remocao-spinner" />
+            Carregando perfil…
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Minha Conta</h1>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
-            {error}
+    <div className="remocao-module">
+      <div className="remocao-page remocao-page--narrow">
+        <header className="remocao-page__header">
+          <div className="remocao-page__heading">
+            <p className="remocao-eyebrow">Conta e segurança</p>
+            <h1 className="remocao-page__title">Minha conta</h1>
+            <p className="remocao-page__subtitle">
+              Atualize seus dados de identificação e mantenha suas credenciais protegidas.
+            </p>
           </div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-            {success}
-          </div>
-        )}
+        </header>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Dados do Perfil</h2>
-          <p className="text-sm text-gray-500 mb-2">
-            <span className="font-medium">Papel:</span> {user.papel}
-            {user.is_root && <span className="ml-2 text-red-600 font-medium">(ROOT)</span>}
-          </p>
-          <p className="text-sm text-gray-500 mb-2">
-            <span className="font-medium">Organização:</span> {user.tenant_nome || 'Nenhuma'}
-          </p>
-          <p className="text-sm text-gray-500 mb-4">
-            <span className="font-medium">Permissões:</span> {user.permissions.length}
-          </p>
+        {error && <div className="remocao-alert remocao-alert--danger" role="alert">{error}</div>}
+        {success && <div className="remocao-alert remocao-alert--success" role="status">{success}</div>}
 
-          <form onSubmit={handleProfileUpdate} className="space-y-4">
+        <section className="remocao-card remocao-account-card" aria-labelledby="account-profile-heading">
+          <div className="remocao-section-heading">
+            <div className="remocao-section-heading__icon"><UserRound size={18} /></div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+              <h2 id="account-profile-heading">Dados do perfil</h2>
+              <p>Informações pessoais e vínculo de acesso.</p>
+            </div>
+          </div>
+
+          <dl className="remocao-account-meta">
+            <div><dt>Perfil de acesso</dt><dd>{user.papel || 'Não informado'}{user.is_root ? ' · ROOT' : ''}</dd></div>
+            <div><dt>Organização ativa</dt><dd>{user.activeTenant?.nome || user.tenant_nome || 'Nenhuma organização selecionada'}</dd></div>
+            <div><dt>Permissões efetivas</dt><dd>{user.permissions.length}</dd></div>
+          </dl>
+
+          <form onSubmit={handleProfileUpdate} className="remocao-form-grid">
+            <div className="remocao-field">
+              <label htmlFor="account-name">Nome completo</label>
               <input
+                id="account-name"
+                name="name"
                 type="text"
+                autoComplete="name"
                 value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={(event) => setNome(event.target.value)}
+                minLength={2}
+                maxLength={160}
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <div className="remocao-field">
+              <label htmlFor="account-email">E-mail de acesso</label>
               <input
+                id="account-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100"
-                disabled
+                onChange={(event) => setEmail(event.target.value)}
+                required
               />
+              <small>O Supabase pode exigir confirmação por e-mail antes de concluir a alteração.</small>
             </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? 'Salvando...' : 'Salvar alterações'}
-            </button>
+            <div className="remocao-form-actions">
+              <button className="remocao-btn remocao-btn--primary" type="submit" disabled={saving}>
+                <Save size={16} />
+                {saving ? 'Salvando…' : 'Salvar alterações'}
+              </button>
+            </div>
           </form>
-        </div>
+        </section>
 
         {!user.is_root && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Alterar Senha</h2>
-            <form onSubmit={handlePasswordChange} className="space-y-4">
+          <section className="remocao-card remocao-account-card" aria-labelledby="account-security-heading">
+            <div className="remocao-section-heading">
+              <div className="remocao-section-heading__icon"><KeyRound size={18} /></div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha atual
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <h2 id="account-security-heading">Segurança da conta</h2>
+                <p>Altere sua senha de acesso.</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nova senha
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                  minLength={8}
-                />
+            </div>
+            <form onSubmit={handlePasswordChange} className="remocao-form-grid">
+              <div className="remocao-field">
+                <label htmlFor="current-password">Senha atual</label>
+                <input id="current-password" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirmar nova senha
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+              <div className="remocao-field">
+                <label htmlFor="new-password">Nova senha</label>
+                <input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required />
+                <small>Use pelo menos 8 caracteres.</small>
               </div>
-              <button
-                type="submit"
-                disabled={passwordSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                {passwordSaving ? 'Alterando...' : 'Alterar senha'}
-              </button>
+              <div className="remocao-field">
+                <label htmlFor="confirm-password">Confirmar nova senha</label>
+                <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={8} required />
+              </div>
+              <div className="remocao-form-actions">
+                <button className="remocao-btn remocao-btn--secondary" type="submit" disabled={passwordSaving}>
+                  <ShieldCheck size={16} />
+                  {passwordSaving ? 'Alterando…' : 'Alterar senha'}
+                </button>
+              </div>
             </form>
-          </div>
+          </section>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Sessão</h2>
-          <button
-            onClick={signOut}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
+        <section className="remocao-card remocao-account-session" aria-labelledby="account-session-heading">
+          <div>
+            <h2 id="account-session-heading">Sessão atual</h2>
+            <p>Encerre o acesso neste dispositivo.</p>
+          </div>
+          <button className="remocao-btn remocao-btn--danger-outline" type="button" onClick={() => void signOut()}>
+            <LogOut size={16} />
             Encerrar sessão
           </button>
-        </div>
+        </section>
       </div>
     </div>
   )
