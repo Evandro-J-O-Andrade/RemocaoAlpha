@@ -18,13 +18,11 @@ export default {
         card: 'var(--card)',
         border: 'var(--border)',
         muted: 'var(--muted)',
-        'muted-foreground': 'var(--muted)',
+        'muted-foreground': 'var(--text-muted)',
         destructive: 'var(--danger)',
 
         'bg': '#0f172a',
         'bg-alt': '#1e293b',
-        'card': '#1e293b',
-        'border': '#33415b',
         'text': '#f1f5f9',
         'text-muted': '#94a3b8',
 
