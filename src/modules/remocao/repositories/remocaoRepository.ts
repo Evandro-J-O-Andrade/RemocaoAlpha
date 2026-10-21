@@ -253,14 +253,35 @@ export class RemocaoRepository {
   static async uploadDocumento(remocaoId: string, tenantId: string, file: File, tipo: string, titulo: string) {
     if (!tenantId) return { data: null, error: new Error('Tenant ID required'), fileUrl: null }
 
-    const fileName = `${remocaoId}/${crypto.randomUUID()}_${file.name}`
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    if (authError || !authData.user) {
+      return { data: null, error: authError || new Error('Usuário autenticado não encontrado'), fileUrl: null }
+    }
 
-    // Upload to storage — tenant scoping is enforced by RLS policy on the bucket
+    let fileHash: string
+    try {
+      const bytes = await file.arrayBuffer()
+      const digest = await crypto.subtle.digest('SHA-256', bytes)
+      fileHash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+    } catch {
+      return { data: null, error: new Error('Não foi possível calcular o hash SHA-256 do arquivo'), fileUrl: null }
+    }
+
+    const safeName = file.name.normalize('NFKC').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-120) || 'documento'
+    const fileName = `${tenantId}/${remocaoId}/${crypto.randomUUID()}_${safeName}`
+
+    // Storage and database RLS remain the authorization boundary.
     const { data: uploadData, error: uploadErr } = await supabase.storage
       .from('remocao-documentos')
-      .upload(fileName, file)
+      .upload(fileName, file, { contentType: file.type, upsert: false })
 
     if (uploadErr) return { data: null, error: uploadErr, fileUrl: null }
+
+    const { data: person } = await supabase
+      .from('people')
+      .select('nome')
+      .eq('id', authData.user.id)
+      .maybeSingle()
 
     const { data, error } = await supabase.from('remocao_documento').insert({
       remocao_id: remocaoId,
@@ -269,19 +290,36 @@ export class RemocaoRepository {
       titulo,
       storage_bucket: 'remocao-documentos',
       storage_path: uploadData.path,
+      file_hash: fileHash,
       file_size: file.size,
       mime_type: file.type,
       status: 'UPLOADED',
+      enviado_por: authData.user.id,
+      enviado_por_nome: person?.nome || authData.user.user_metadata?.nome || authData.user.email || 'Usuário autenticado',
+      enviado_at: new Date().toISOString(),
     }).select().single()
 
-    // Use signed URL instead of public URL (bucket is private)
+    if (error || !data) {
+      // Avoid leaving a private file orphaned if metadata persistence fails.
+      const { error: cleanupError } = await supabase.storage
+        .from('remocao-documentos')
+        .remove([uploadData.path])
+      const message = error?.message || 'Não foi possível salvar os metadados do documento.'
+      return {
+        data: null,
+        error: cleanupError ? new Error(`${message}. A limpeza do arquivo também falhou: ${cleanupError.message}`) : (error || new Error(message)),
+        fileUrl: null,
+      }
+    }
+
+    // Bucket is private; return a short-lived signed URL only after metadata is persisted.
     const { data: signedUrl, error: signErr } = await supabase.storage
       .from('remocao-documentos')
       .createSignedUrl(uploadData.path, 3600)
 
     return {
       data: data as Tables['remocao_documento']['Row'] | null,
-      error: error || signErr,
+      error: signErr || null,
       fileUrl: signedUrl?.signedUrl || null,
     }
   }
