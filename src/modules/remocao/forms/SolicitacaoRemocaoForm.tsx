@@ -58,6 +58,7 @@ export function SolicitacaoRemocaoForm({
   const [documentoTipo, setDocumentoTipo] = useState<'relatorio_medico' | 'documento_transferencia' | 'autorizacao_transferencia' | 'pedido_exame' | 'resultado_exame' | 'prescricao' | 'documento_administrativo' | 'outro'>('outro')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitNotice, setSubmitNotice] = useState<string | null>(null)
+  const [createdRemocaoId, setCreatedRemocaoId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -167,6 +168,7 @@ export function SolicitacaoRemocaoForm({
       }
 
       if (uploadErrors.length > 0) {
+        setCreatedRemocaoId(result.data.id)
         setSubmitting(false)
         setSubmitError(`A remoção foi criada, mas nem todos os documentos foram enviados. ${uploadErrors.join(' | ')}. Abra a remoção criada e tente anexar os arquivos pendentes.`)
         setSubmitNotice(`Solicitação ${result.data.numero || result.data.id} criada. Verifique os documentos pendentes antes de continuar.`)
@@ -190,6 +192,7 @@ export function SolicitacaoRemocaoForm({
     setDocumentos([])
     setSubmitError(null)
     setSubmitNotice(null)
+    setCreatedRemocaoId(null)
   }
 
   return (
@@ -520,14 +523,24 @@ export function SolicitacaoRemocaoForm({
         >
           Cancelar
         </button>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />}
-          {submitting ? 'Salvando solicitação…' : 'Solicitar remoção'}
-        </button>
+        {createdRemocaoId ? (
+          <button
+            type="button"
+            onClick={() => onSuccess?.(createdRemocaoId)}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Abrir solicitação criada
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />}
+            {submitting ? 'Salvando solicitação…' : 'Solicitar remoção'}
+          </button>
+        )}
       </div>
     </form>
   )
