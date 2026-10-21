@@ -319,8 +319,8 @@ export class RemocaoRepository {
 
     return {
       data: data as Tables['remocao_documento']['Row'] | null,
-      error: signErr || null,
-      fileUrl: signedUrl?.signedUrl || null,
+      error: null,
+      fileUrl: signErr ? null : (signedUrl?.signedUrl || null),
     }
   }
 
