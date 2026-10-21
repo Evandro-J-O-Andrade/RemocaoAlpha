@@ -65,7 +65,7 @@ export function NovaRemocaoPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800 flex items-center gap-2">
+          <div className="mb-4 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
             <AlertTriangle size={16} />
             {error}
           </div>
@@ -76,6 +76,7 @@ export function NovaRemocaoPage() {
             tenantId={tenantId}
             onSuccess={handleSuccess}
             onCancel={() => navigate('/')}
+            onError={(message) => setError(message)}
           />
         </div>
       </div>
