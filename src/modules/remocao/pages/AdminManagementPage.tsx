@@ -140,8 +140,8 @@ export function AdminManagementPage() {
       setEditError('Selecione uma função diferente para aplicar a alteração.')
       return
     }
-    if (selectedRole.key === 'admin_master' && !user.is_root) {
-      setEditError('Somente ROOT pode atribuir a função global admin_master.')
+    if (selectedRole.key === 'admin_master') {
+      setEditError('A função admin_master não pode ser atribuída por vínculo. Privilégios ROOT são gerenciados separadamente.')
       return
     }
     if (editing.person_id === user.id) {
@@ -389,7 +389,7 @@ export function AdminManagementPage() {
                     onChange={(event) => setEditRoleId(event.target.value)}
                     disabled={!canAssignRoles || editing.person_id === user?.id || editing.papel === 'admin_master' || !roles.length}
                   >
-                    {assignableRoles.filter((role) => role.id === editing.role_id || user?.is_root || (!role.sistema && role.key !== 'admin_master' && role.nivel < (assignableRoles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER))).map((role) => (
+                    {assignableRoles.filter((role) => role.key !== 'admin_master' && (role.id === editing.role_id || user?.is_root || (!role.sistema && role.nivel < (assignableRoles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER)))).map((role) => (
                       <option key={role.id} value={role.id}>{role.nome} · nível {role.nivel}</option>
                     ))}
                   </select>
