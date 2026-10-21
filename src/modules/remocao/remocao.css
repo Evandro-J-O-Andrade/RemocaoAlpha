@@ -2200,3 +2200,137 @@ html.dark {
     transition: none;
   }
 }
+
+
+/* Administrative user-edit workflow */
+.remocao-admin-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.remocao-admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(2 8 23 / 58%);
+  backdrop-filter: blur(3px);
+}
+
+.remocao-admin-modal {
+  width: min(100%, 620px);
+  max-height: min(86dvh, 760px);
+  overflow: auto;
+  border: 1px solid var(--rem-border);
+  border-radius: var(--rem-radius-lg);
+  background: var(--rem-surface);
+  color: var(--rem-text);
+  box-shadow: 0 24px 70px rgb(2 8 23 / 30%);
+}
+
+.remocao-admin-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--rem-border);
+}
+
+.remocao-admin-modal__header h2 {
+  margin: 2px 0 6px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--rem-text);
+}
+
+.remocao-admin-modal__header p:last-child {
+  max-width: 480px;
+  margin: 0;
+  color: var(--rem-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.remocao-admin-edit-form {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 24px;
+}
+
+.remocao-admin-edit-form .remocao-field {
+  min-width: 0;
+}
+
+.remocao-admin-edit-form input,
+.remocao-admin-edit-form select {
+  width: 100%;
+  min-width: 0;
+}
+
+.remocao-admin-edit-form input[readonly] {
+  color: var(--rem-text-muted);
+  background: var(--rem-surface-muted);
+  cursor: not-allowed;
+}
+
+.remocao-admin-edit-form small {
+  display: block;
+  margin-top: 6px;
+  color: var(--rem-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.remocao-admin-edit-form .remocao-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rem-border);
+}
+
+@media (max-width: 560px) {
+  .remocao-admin-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .remocao-admin-modal {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .remocao-admin-modal__header {
+    padding: 18px 16px 14px;
+  }
+
+  .remocao-admin-edit-form {
+    padding: 18px 16px 20px;
+  }
+
+  .remocao-admin-edit-form .remocao-form-actions {
+    justify-content: stretch;
+  }
+
+  .remocao-admin-edit-form .remocao-form-actions button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .remocao-admin-modal-backdrop {
+    backdrop-filter: none;
+  }
+}
