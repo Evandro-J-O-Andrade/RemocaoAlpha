@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Menu, LogOut, User, Bell, Settings, ChevronLeft } from 'lucide-react'
+import { Menu, User, ChevronLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
@@ -102,12 +102,13 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <button
-            onClick={signOut}
+            onClick={() => void signOut()}
             className={cn('auth-sidebar__signout', sidebarOpen && 'auth-sidebar__signout--label')}
-            title="Sair"
+            title="Sair da conta"
+            aria-label="Sair da conta"
           >
-            <LogOut size={18} />
-            {sidebarOpen && <span>Sair</span>}
+            {sidebarOpen && <span>Encerrar sessão</span>}
+            {!sidebarOpen && <span aria-hidden="true">↗</span>}
           </button>
         </div>
       </aside>
@@ -125,32 +126,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             <h1 className="auth-header__title-text">Gestão de Remoção Alpha</h1>
           </div>
           <div className="auth-header__actions">
-            <button className="auth-header__icon-btn" title="Notificacoes">
-              <Bell size={20} />
-            </button>
-            <button className="auth-header__icon-btn" title="Configuracoes">
-              <Settings size={20} />
-            </button>
-            <div className="auth-header__user">
-              <div className="auth-header__avatar">
-                <User size={20} />
-              </div>
-              <div className="auth-header__user-info">
-                {sidebarOpen && (
-                  <>
-                    <div className="auth-header__user-name">
-{user?.username || 'Usuario'}
-                    </div>
-                    <OrganizationSwitcher />
-                  </>
-                )}
-                <div className="auth-header__user-role">
-                  {user?.papel || 'carregando...'}
-                </div>
-              </div>
-              <button onClick={signOut} className="auth-header__signout" title="Sair">
-                <LogOut size={16} />
-              </button>
+            <div className="auth-header__organization">
+              <OrganizationSwitcher />
             </div>
           </div>
         </header>
