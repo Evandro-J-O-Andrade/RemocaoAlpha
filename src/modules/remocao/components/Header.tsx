@@ -1,10 +1,7 @@
 import { User } from 'lucide-react'
-import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
 
 export function Header() {
-  const { user } = useAuth()
-
   return (
     <header className="remocao-header-gradient">
       <div className="remocao-page">
