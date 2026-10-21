@@ -254,15 +254,29 @@ describe('NovaRemocaoPage — fluxo de solicitação', () => {
     })
   })
 
-  it('bloqueia a criação quando o tenant ativo é o identificador sentinela', async () => {
-    authState.user = { ...defaultUser(), tenant_id: PLACEHOLDER_TENANT_ID }
+  it('bloqueia a criação quando o tenant ativo não está resolvido', async () => {
+    authState.user = { ...defaultUser(), tenant_id: '', tenant_nome: '' }
 
     const { container } = renderPage()
 
-    expect(await screen.findByText(/unidade de atendimento não resolvida/i)).toBeTruthy()
+    expect(await screen.findByText(/organização de atendimento não resolvida/i)).toBeTruthy()
     expect(container.querySelector('form')).toBeNull()
     expect(screen.queryByPlaceholderText(/nome completo/i)).toBeNull()
     expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it('libera a criação com o tenant real do RemoçãoAlpha (id 0000...0001)', async () => {
+    authState.user = {
+      ...defaultUser(),
+      tenant_id: PLACEHOLDER_TENANT_ID,
+      tenant_nome: 'Instituto Alpha de Medicina para Saúde',
+    }
+
+    const { container } = renderPage()
+
+    expect(await screen.findByPlaceholderText(/nome completo/i)).toBeTruthy()
+    expect(container.querySelector('form')).not.toBeNull()
+    expect(screen.queryByText(/organização de atendimento não resolvida/i)).toBeNull()
   })
 })
 

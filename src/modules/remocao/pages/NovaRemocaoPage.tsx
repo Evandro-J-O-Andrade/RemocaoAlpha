@@ -17,7 +17,11 @@ import { StatePage } from '@/modules/remocao/components/StatePage'
 import { SolicitacaoRemocaoForm } from '@/modules/remocao/forms/SolicitacaoRemocaoForm'
 import { useAuth } from '@/app/providers/AuthProvider'
 
-const PLACEHOLDER_TENANT_ID = '00000000-0000-0000-0000-000000000001'
+// O tenant ativo precisa estar resolvido pelo backend: id e nome reais,
+// devolvidos por get_current_tenant_info() a partir do JOIN com tenants.
+// Não se compara o id com valores fixos — no banco do RemoçãoAlpha o tenant
+// real é 00000000-0000-0000-0000-000000000001, e uma comparação fixa bloquearia
+// indevidamente a criação de remoções para todos os usuários.
 
 const workflow = [
   { icon: HeartPulse, title: 'Paciente e condição clínica', description: 'Identificação, diagnóstico, precauções e necessidades assistenciais.' },
@@ -44,15 +48,15 @@ export function NovaRemocaoPage() {
   }
 
   const tenantId = user.tenant_id
-  const invalidTenant = !tenantId || tenantId === PLACEHOLDER_TENANT_ID
+  const tenantResolved = Boolean(tenantId) && Boolean(user.tenant_nome)
 
-  if (invalidTenant) {
+  if (!tenantResolved) {
     return (
       <StatePage
         variant="unauthorized"
         icon={<AlertTriangle size={40} />}
-        title="Unidade de atendimento não resolvida"
-        description="Por segurança, não é possível criar uma remoção sem um tenant real e autorizado. Selecione uma organização válida ou solicite a correção do seu vínculo ao administrador."
+        title="Organização de atendimento não resolvida"
+        description="Por segurança, não é possível criar uma remoção sem uma organização real e autorizada no contexto atual. Selecione uma organização válida ou solicite a correção do seu vínculo ao administrador."
       >
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
