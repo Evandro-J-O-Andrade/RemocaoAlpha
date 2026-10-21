@@ -518,6 +518,216 @@ html.dark {
   box-shadow: var(--rem-shadow-focus);
 }
 
+/* Campos de formulários: tokens compartilhados para tema claro e escuro. */
+.remocao-module .remocao-field > label,
+.remocao-driver-app .remocao-field > label,
+.remocao-module .remocao-field__label,
+.remocao-driver-app .remocao-field__label {
+  color: var(--rem-text);
+}
+
+.remocao-module .remocao-field > input,
+.remocao-module .remocao-field > select,
+.remocao-module .remocao-field > textarea,
+.remocao-driver-app .remocao-field > input,
+.remocao-driver-app .remocao-field > select,
+.remocao-driver-app .remocao-field > textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 11px;
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border: 1px solid var(--rem-border-strong);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.remocao-module .remocao-field > textarea,
+.remocao-driver-app .remocao-field > textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.remocao-module .remocao-field > input::placeholder,
+.remocao-module .remocao-field > textarea::placeholder,
+.remocao-driver-app .remocao-field > input::placeholder,
+.remocao-driver-app .remocao-field > textarea::placeholder,
+.remocao-input::placeholder,
+.remocao-textarea::placeholder {
+  color: var(--rem-text-soft);
+  opacity: 1;
+}
+
+.remocao-module .remocao-field > input:focus,
+.remocao-module .remocao-field > select:focus,
+.remocao-module .remocao-field > textarea:focus,
+.remocao-driver-app .remocao-field > input:focus,
+.remocao-driver-app .remocao-field > select:focus,
+.remocao-driver-app .remocao-field > textarea:focus {
+  border-color: var(--rem-primary);
+  box-shadow: var(--rem-shadow-focus);
+}
+
+.remocao-module .remocao-field > input:disabled,
+.remocao-module .remocao-field > select:disabled,
+.remocao-module .remocao-field > textarea:disabled,
+.remocao-driver-app .remocao-field > input:disabled,
+.remocao-driver-app .remocao-field > select:disabled,
+.remocao-driver-app .remocao-field > textarea:disabled {
+  color: var(--rem-text-muted);
+  background: var(--rem-surface-muted);
+  cursor: not-allowed;
+  opacity: .8;
+}
+
+.remocao-module .remocao-field > small,
+.remocao-driver-app .remocao-field > small {
+  color: var(--rem-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.remocao-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.remocao-form-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.remocao-account-card {
+  padding: 18px;
+  border-radius: var(--rem-radius-md);
+}
+
+.remocao-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+
+.remocao-section-heading__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--rem-primary);
+  background: var(--rem-primary-soft);
+  border-radius: 8px;
+}
+
+.remocao-section-heading h2,
+.remocao-account-session h2 {
+  margin: 0;
+  color: var(--rem-text);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.remocao-section-heading p,
+.remocao-account-session p {
+  margin: 3px 0 0;
+  color: var(--rem-text-muted);
+  font-size: 12px;
+}
+
+.remocao-account-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--rem-border);
+}
+
+.remocao-account-meta > div {
+  min-width: 0;
+}
+
+.remocao-account-meta dt {
+  color: var(--rem-text-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.remocao-account-meta dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--rem-text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.remocao-account-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.remocao-alert {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--rem-border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.remocao-alert--danger {
+  color: var(--rem-danger);
+  background: var(--rem-danger-bg);
+  border-color: color-mix(in srgb, var(--rem-danger) 25%, var(--rem-border));
+}
+
+.remocao-alert--success {
+  color: var(--rem-success);
+  background: var(--rem-success-bg);
+  border-color: color-mix(in srgb, var(--rem-success) 25%, var(--rem-border));
+}
+
+.remocao-btn--danger-outline {
+  color: var(--rem-danger);
+  background: var(--rem-surface);
+  border-color: color-mix(in srgb, var(--rem-danger) 35%, var(--rem-border));
+}
+
+.remocao-btn--danger-outline:hover:not(:disabled) {
+  background: var(--rem-danger-bg);
+}
+
+@media (max-width: 680px) {
+  .remocao-form-grid,
+  .remocao-account-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .remocao-account-session {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .remocao-module *,
+  .remocao-driver-app * {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
 .remocao-input[aria-invalid="true"],
 .remocao-select[aria-invalid="true"],
 .remocao-textarea[aria-invalid="true"] {
