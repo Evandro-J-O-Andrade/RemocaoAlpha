@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { KeyRound, LogOut, Save, ShieldCheck, UserRound } from 'lucide-react'
+import { KeyRound, Save, ShieldCheck, UserRound } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { supabase } from '@/lib/supabase/client'
 
@@ -235,16 +235,7 @@ export function AccountPage() {
           </section>
         )}
 
-        <section className="remocao-card remocao-account-session" aria-labelledby="account-session-heading">
-          <div>
-            <h2 id="account-session-heading">Sessão atual</h2>
-            <p>Encerre o acesso neste dispositivo.</p>
-          </div>
-          <button className="remocao-btn remocao-btn--danger-outline" type="button" onClick={() => void signOut()}>
-            <LogOut size={16} />
-            Encerrar sessão
-          </button>
-        </section>
+
       </div>
     </div>
   )
