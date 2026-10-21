@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Menu, User, ChevronLeft } from 'lucide-react'
+import { Menu, User, ChevronLeft, LogOut } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
@@ -107,8 +107,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             title="Sair da conta"
             aria-label="Sair da conta"
           >
+            <LogOut size={18} />
             {sidebarOpen && <span>Encerrar sessão</span>}
-            {!sidebarOpen && <span aria-hidden="true">↗</span>}
           </button>
         </div>
       </aside>
