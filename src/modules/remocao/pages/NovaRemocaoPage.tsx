@@ -11,6 +11,7 @@ import {
   MapPinned,
   ShieldCheck,
   Truck,
+  Loader2,
 } from 'lucide-react'
 import { StatePage } from '@/modules/remocao/components/StatePage'
 import { SolicitacaoRemocaoForm } from '@/modules/remocao/forms/SolicitacaoRemocaoForm'
@@ -34,6 +35,7 @@ export function NovaRemocaoPage() {
     return (
       <StatePage
         variant="loading"
+        icon={<Loader2 size={40} className="animate-spin" />}
         title="Preparando solicitação"
         description="Estamos validando sua sessão e o contexto de atendimento."
         showLogo
