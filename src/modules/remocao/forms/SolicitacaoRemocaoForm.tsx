@@ -446,8 +446,9 @@ export function SolicitacaoRemocaoForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Selecionar arquivos</label>
+            <label htmlFor="solicitacao-documentos" className="block text-sm font-medium mb-1">Selecionar arquivos</label>
             <input
+              id="solicitacao-documentos"
               ref={fileInputRef}
               type="file"
               multiple
