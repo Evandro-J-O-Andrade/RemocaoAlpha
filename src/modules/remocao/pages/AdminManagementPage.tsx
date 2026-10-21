@@ -52,7 +52,6 @@ export function AdminManagementPage() {
   const [page, setPage] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [editing, setEditing] = useState<TenantMembership | null>(null)
-  const [editName, setEditName] = useState('')
   const [editRoleId, setEditRoleId] = useState('')
   const [assignableRoles, setAssignableRoles] = useState<Role[]>([])
   const [editSaving, setEditSaving] = useState(false)
@@ -119,7 +118,6 @@ export function AdminManagementPage() {
     setSuccess(null)
     setEditError(null)
     setEditing(membership)
-    setEditName(membership.person?.nome || '')
     setEditRoleId(membership.role_id || '')
     const { data, error: rolesError } = await supabase
       .from('roles')
@@ -134,21 +132,24 @@ export function AdminManagementPage() {
 
   const handleSaveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!editing || !user) return
-    const normalizedName = editName.trim()
-    if (normalizedName.length < 2) {
-      setEditError('Informe um nome com pelo menos 2 caracteres.')
-      return
-    }
+    if (!editing || !user || !canAssignRoles) return
 
     const selectedRole = assignableRoles.find((role) => role.id === editRoleId)
     const roleChanged = Boolean(editRoleId && editRoleId !== editing.role_id)
-    if (canAssignRoles && roleChanged && !selectedRole) {
-      setEditError('A função selecionada não está disponível para atribuição.')
+    if (!roleChanged || !selectedRole) {
+      setEditError('Selecione uma função diferente para aplicar a alteração.')
       return
     }
-    if (canAssignRoles && selectedRole?.key === 'admin_master' && !user.is_root) {
+    if (selectedRole.key === 'admin_master' && !user.is_root) {
       setEditError('Somente ROOT pode atribuir a função global admin_master.')
+      return
+    }
+    if (editing.person_id === user.id) {
+      setEditError('Não é permitido alterar a própria função por esta tela.')
+      return
+    }
+    if (editing.papel === 'admin_master' || editing.role?.key === 'admin_master') {
+      setEditError('O vínculo ROOT é protegido e não pode ser alterado por esta tela.')
       return
     }
 
@@ -157,41 +158,28 @@ export function AdminManagementPage() {
     setError(null)
     setSuccess(null)
     try {
-      const { data: updatedPerson, error: personError } = await supabase
-        .from('people')
-        .update({ nome: normalizedName })
-        .eq('id', editing.person_id)
-        .select('id')
-        .maybeSingle()
-      if (personError) throw personError
-      if (!updatedPerson) {
-        throw new Error('O nome não foi atualizado. Verifique suas permissões e tente novamente.')
-      }
-
-      if (canAssignRoles && roleChanged && selectedRole) {
-        if (!user.is_root) {
-          const ownRole = assignableRoles.find((role) => role.key === user.papel)
-          if (ownRole && selectedRole.nivel >= ownRole.nivel) {
-            throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
-          }
-          if (selectedRole.sistema) {
-            throw new Error('Funções de sistema só podem ser atribuídas por ROOT.')
-          }
+      if (!user.is_root) {
+        const ownRole = assignableRoles.find((role) => role.key === user.papel)
+        if (ownRole && selectedRole.nivel >= ownRole.nivel) {
+          throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
         }
-
-        const { error: membershipError } = await supabase
-          .from('tenant_memberships')
-          .update({ role_id: selectedRole.id, papel: selectedRole.key })
-          .eq('id', editing.id)
-          .eq('tenant_id', editing.tenant_id)
-        if (membershipError) throw membershipError
+        if (selectedRole.sistema) {
+          throw new Error('Funções de sistema só podem ser atribuídas por ROOT.')
+        }
       }
+
+      const { error: membershipError } = await supabase
+        .from('tenant_memberships')
+        .update({ role_id: selectedRole.id, papel: selectedRole.key })
+        .eq('id', editing.id)
+        .eq('tenant_id', editing.tenant_id)
+      if (membershipError) throw membershipError
 
       setEditing(null)
-      setSuccess('Dados do usuário atualizados.')
+      setSuccess('Função do usuário atualizada.')
       await loadData('users')
     } catch (err: unknown) {
-      setEditError(err instanceof Error ? err.message : 'Não foi possível salvar as alterações.')
+      setEditError(err instanceof Error ? err.message : 'Não foi possível salvar a função.')
     } finally {
       setEditSaving(false)
     }
@@ -293,10 +281,12 @@ export function AdminManagementPage() {
                             type="button"
                             onClick={() => void openEdit(m)}
                             className="remocao-btn remocao-btn--sm remocao-btn--ghost"
-                            aria-label={`Editar usuário ${m.person?.nome || m.person_id}`}
+                            aria-label={`Editar função de ${m.person?.nome || m.person_id}`}
+                            disabled={!canAssignRoles || m.person_id === user?.id || m.papel === 'admin_master' || m.role?.key === 'admin_master'}
+                            title={!canAssignRoles ? 'Seu perfil não pode atribuir funções' : undefined}
                           >
                             <Pencil size={14} />
-                            Editar
+                            Editar função
                           </button>
                           {m.status === 'pendente' && (
                             <button
@@ -386,15 +376,11 @@ export function AdminManagementPage() {
               </header>
               <form className="remocao-form-grid remocao-admin-edit-form" onSubmit={handleSaveEdit} noValidate>
                 {editError && <div className="remocao-alert remocao-alert--danger" role="alert">{editError}</div>}
-                <div className="remocao-field">
-                  <label htmlFor="admin-edit-name">Nome completo</label>
-                  <input id="admin-edit-name" name="name" autoComplete="name" value={editName} onChange={(event) => setEditName(event.target.value)} minLength={2} maxLength={160} required aria-invalid={Boolean(editError && editName.trim().length < 2)} />
+                <div className="remocao-admin-edit-identity">
+                  <div><span>Nome completo</span><strong>{editing.person?.nome || 'Nome não informado'}</strong></div>
+                  <div><span>E-mail de acesso</span><strong>{editing.person?.email || 'E-mail não informado'}</strong></div>
                 </div>
-                <div className="remocao-field">
-                  <label htmlFor="admin-edit-email">E-mail de acesso</label>
-                  <input id="admin-edit-email" type="email" value={editing.person?.email || ''} readOnly aria-describedby="admin-edit-email-help" />
-                  <small id="admin-edit-email-help">A troca do e-mail de autenticação exige um fluxo seguro de confirmação; não será alterada apenas no cadastro.</small>
-                </div>
+                <p className="remocao-admin-edit-note">O banco atual permite que o próprio usuário altere o nome em Minha Conta, mas não concede essa alteração a administradores. Para preservar a segurança, esta tela não tenta contornar a política de acesso nem altera e-mail de autenticação.</p>
                 <div className="remocao-field">
                   <label htmlFor="admin-edit-role">Função no vínculo</label>
                   <select
@@ -407,15 +393,15 @@ export function AdminManagementPage() {
                       <option key={role.id} value={role.id}>{role.nome} · nível {role.nivel}</option>
                     ))}
                   </select>
-                  {!canAssignRoles && <small>Seu perfil pode editar a identificação, mas não atribuir funções.</small>}
+                  {!canAssignRoles && <small>Seu perfil não pode atribuir funções.</small>}
                   {editing.person_id === user?.id && <small>Não é permitido alterar a própria função por esta tela.</small>}
                   {(editing.papel === 'admin_master' || editing.role?.key === 'admin_master') && <small>O vínculo ROOT é protegido e não pode ser alterado por esta tela.</small>}
                 </div>
                 <div className="remocao-form-actions">
                   <button type="button" className="remocao-btn remocao-btn--ghost" disabled={editSaving} onClick={() => setEditing(null)}>Cancelar</button>
-                  <button type="submit" className="remocao-btn remocao-btn--primary" disabled={editSaving}>
+                  <button type="submit" className="remocao-btn remocao-btn--primary" disabled={editSaving || !canAssignRoles || editing.person_id === user?.id || editing.papel === 'admin_master' || editing.role?.key === 'admin_master'}>
                     <Save size={16} />
-                    {editSaving ? 'Salvando…' : 'Salvar alterações'}
+                    {editSaving ? 'Salvando…' : 'Salvar função'}
                   </button>
                 </div>
               </form>
