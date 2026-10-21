@@ -75,6 +75,7 @@ export function NovaRemocaoPage() {
           <SolicitacaoRemocaoForm
             tenantId={tenantId}
             onSuccess={handleSuccess}
+            onCancel={() => navigate('/')}
           />
         </div>
       </div>
