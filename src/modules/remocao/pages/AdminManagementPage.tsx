@@ -49,6 +49,7 @@ export function AdminManagementPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [page, setPage] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
 
   const canManageUsers = user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root
   const canManageRoles = user?.permissions.includes(Perm.ADMIN_ROLES_MANAGE) || user?.is_root
@@ -63,34 +64,40 @@ export function AdminManagementPage() {
 
   useEffect(() => {
     if (availableTabs.length === 0) return
-    loadData(activeTab)
-  }, [activeTab])
+    void loadData(activeTab)
+  }, [activeTab, page])
 
   async function loadData(currentTab: Tab) {
     setLoading(true)
     setError(null)
     try {
       if (currentTab === 'users') {
-        const { data, error: err } = await supabase
+        const { data, error: err, count } = await supabase
           .from('tenant_memberships')
-          .select('*, person:people(nome, email), role:roles(nome, key)')
+          .select('*, person:people(nome, email), role:roles(nome, key)', { count: 'exact' })
+          .order('convidado_em', { ascending: false })
           .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
         if (err) throw err
         setMemberships((data as TenantMembership[]) || [])
+        setTotalCount(count || 0)
       } else if (currentTab === 'roles') {
         const { data, error: err } = await supabase
           .from('roles')
-          .select('*')
+          .select('*', { count: 'exact' })
+          .order('nivel', { ascending: false })
           .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
         if (err) throw err
         setRoles((data as Role[]) || [])
+        setTotalCount(count || 0)
       } else if (currentTab === 'tenants') {
         const { data, error: err } = await supabase
           .from('tenants')
-          .select('id, nome, razao_social, cnpj, email, ativo, created_at')
+          .select('id, nome, razao_social, cnpj, email, ativo, created_at', { count: 'exact' })
+          .order('nome', { ascending: true })
           .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
         if (err) throw err
         setTenants((data as Tenant[]) || [])
+        setTotalCount(count || 0)
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dados')
@@ -125,37 +132,30 @@ export function AdminManagementPage() {
 
   return (
     <div className="remocao-module min-h-screen">
-      <div className="remocao-page">
+      <div className="remocao-page remocao-admin-page">
         <div className="remocao-page__header">
           <div className="remocao-page__heading">
-            <p className="remocao-eyebrow">Administração</p>
-            <h1 className="remocao-page__title">Gestão do Sistema</h1>
-            <p className="remocao-page__subtitle">Gerenciamento de usuários, funções e organizações.</p>
+            <p className="remocao-eyebrow">CENTRAL DE CONTROLE</p>
+            <h1 className="remocao-page__title">Administração</h1>
+            <p className="remocao-page__subtitle">Acessos, funções e organizações do ambiente SaaS.</p>
           </div>
         </div>
 
         {error && (
-          <div className="remocao-card mb-4">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
+          <div className="remocao-alert remocao-alert--danger" role="alert">{error}</div>
         )}
         {success && (
-          <div className="remocao-card mb-4">
-            <p className="text-green-600 text-sm">{success}</p>
-          </div>
+          <div className="remocao-alert remocao-alert--success" role="status">{success}</div>
         )}
 
-        <div className="remocao-card mb-6">
-          <nav className="flex space-x-4">
+        <div className="remocao-admin-tabs">
+          <nav className="flex flex-wrap gap-2" aria-label="Seções administrativas">
             {availableTabs.map((t) => (
               <button
                 key={t}
                 onClick={() => { setTab(t); setPage(0) }}
-                className={`py-2 px-3 text-sm font-medium border-b-2 ${
-                  activeTab === t
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                aria-current={activeTab === t ? 'page' : undefined}
+                className={`remocao-admin-tab ${activeTab === t ? 'remocao-admin-tab--active' : ''}`}
               >
                 {t === 'users' ? 'Usuários' : t === 'roles' ? 'Funções' : 'Organizações'}
               </button>
@@ -175,27 +175,28 @@ export function AdminManagementPage() {
               <p className="remocao-empty__text">Não há vínculos de tenant cadastrados.</p>
             </div>
           ) : (
-            <div className="remocao-card overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="remocao-table-wrap">
+              <table className="remocao-table">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Usuário</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Função</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Aprovado em</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase">Ações</th>
+                    <th>Usuário</th>
+                    <th>Função</th>
+                    <th>Status</th>
+                    <th>Aprovado em</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {memberships.map((m) => (
                     <tr key={m.id}>
-                      <td className="px-6 py-4 text-sm">{m.person?.email || m.person_id}</td>
-                      <td className="px-6 py-4 text-sm">{m.papel || m.role?.key}</td>
-                      <td className="px-6 py-4 text-sm capitalize">{m.status}</td>
-                      <td className="px-6 py-4 text-sm">
-                        {m.aprovado_em ? new Date(m.aprovado_em).toLocaleDateString('pt-BR') : '-'}
+                      <td>
+                        <span className="remocao-table__primary">{m.person?.nome || 'Nome não informado'}</span>
+                        <span className="remocao-table__secondary">{m.person?.email || m.person_id}</span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td>{m.role?.nome || m.papel || 'Sem função'}</td>
+                      <td><span className="remocao-status">{m.status}</span></td>
+                      <td>{m.aprovado_em ? new Date(m.aprovado_em).toLocaleDateString('pt-BR') : '—'}</td>
+                      <td>
                         {m.status === 'pendente' && (
                           <button
                             onClick={() => handleApprove(m.id)}
@@ -238,25 +239,25 @@ export function AdminManagementPage() {
               <p className="remocao-empty__title">Nenhuma organização encontrada</p>
             </div>
           ) : (
-            <div className="remocao-card overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="remocao-table-wrap">
+              <table className="remocao-table">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Nome</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Razão Social</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">CNPJ</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Ativo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Criado em</th>
+                    <th>Nome</th>
+                    <th>Razão social</th>
+                    <th>CNPJ</th>
+                    <th>Status</th>
+                    <th>Criado em</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {tenants.map((t) => (
                     <tr key={t.id}>
-                      <td className="px-6 py-4 text-sm">{t.nome}</td>
-                      <td className="px-6 py-4 text-sm">{t.razao_social || '-'}</td>
-                      <td className="px-6 py-4 text-sm">{t.cnpj || '-'}</td>
-                      <td className="px-6 py-4 text-sm">{t.ativo ? 'Sim' : 'Não'}</td>
-                      <td className="px-6 py-4 text-sm">{new Date(t.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td><span className="remocao-table__primary">{t.nome}</span></td>
+                      <td>{t.razao_social || '—'}</td>
+                      <td>{t.cnpj || '—'}</td>
+                      <td><span className="remocao-status">{t.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                      <td>{new Date(t.created_at).toLocaleDateString('pt-BR')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,22 +266,24 @@ export function AdminManagementPage() {
           )
         )}
 
-        <div className="flex justify-center gap-2 mt-4">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="remocao-btn remocao-btn--sm remocao-btn--ghost"
-          >
-            Anterior
-          </button>
-          <span className="text-sm py-2">Página {page + 1}</span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            className="remocao-btn remocao-btn--sm remocao-btn--ghost"
-          >
-            Próxima
-          </button>
-        </div>
+        <footer className="remocao-admin-pagination">
+          <span className="remocao-admin-pagination__summary">
+            {totalCount === 0 ? 'Nenhum registro' : `Exibindo ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, totalCount)} de ${totalCount}`}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0 || loading}
+              className="remocao-btn remocao-btn--sm remocao-btn--ghost"
+            >Anterior</button>
+            <span className="text-sm" aria-live="polite">Página {page + 1} de {Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={loading || (page + 1) * PAGE_SIZE >= totalCount}
+              className="remocao-btn remocao-btn--sm remocao-btn--ghost"
+            >Próxima</button>
+          </div>
+        </footer>>
       </div>
     </div>
   )
