@@ -2334,3 +2334,50 @@ html.dark {
     backdrop-filter: none;
   }
 }
+
+
+.remocao-admin-edit-identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.remocao-admin-edit-identity > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--rem-border);
+  border-radius: var(--rem-radius-sm);
+  background: var(--rem-surface-muted);
+}
+
+.remocao-admin-edit-identity span {
+  color: var(--rem-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.remocao-admin-edit-identity strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--rem-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.remocao-admin-edit-note {
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--rem-warning);
+  background: var(--rem-warning-bg);
+  color: var(--rem-text);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .remocao-admin-edit-identity {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
