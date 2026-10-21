@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Pencil, Save, X } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { supabase } from '@/lib/supabase/client'
 import { Perm } from '@/modules/remocao/permissions'
@@ -50,9 +51,15 @@ export function AdminManagementPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
+  const [editing, setEditing] = useState<TenantMembership | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editRoleId, setEditRoleId] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   const canManageUsers = user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root
   const canManageRoles = user?.permissions.includes(Perm.ADMIN_ROLES_MANAGE) || user?.is_root
+  const canAssignRoles = user?.permissions.includes(Perm.ADMIN_USERS_ASSIGN_ROLE) || user?.is_root
   const canManageTenants = user?.permissions.includes(Perm.ADMIN_TENANT_MANAGE) || user?.is_root
 
   const availableTabs: Tab[] = []
@@ -103,6 +110,90 @@ export function AdminManagementPage() {
       setError(err.message || 'Erro ao carregar dados')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openEdit = async (membership: TenantMembership) => {
+    setError(null)
+    setSuccess(null)
+    setEditError(null)
+    setEditing(membership)
+    setEditName(membership.person?.nome || '')
+    setEditRoleId(membership.role_id || '')
+    if (roles.length === 0) {
+      const { data, error: rolesError } = await supabase
+        .from('roles')
+        .select('id, key, nome, descricao, nivel, sistema')
+        .order('nivel', { ascending: false })
+      if (rolesError) {
+        setEditError('Não foi possível carregar as funções disponíveis.')
+        return
+      }
+      setRoles((data as Role[]) || [])
+    }
+  }
+
+  const handleSaveEdit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!editing || !user) return
+    const normalizedName = editName.trim()
+    if (normalizedName.length < 2) {
+      setEditError('Informe um nome com pelo menos 2 caracteres.')
+      return
+    }
+
+    const selectedRole = roles.find((role) => role.id === editRoleId)
+    if (canAssignRoles && !selectedRole) {
+      setEditError('Selecione uma função válida.')
+      return
+    }
+    if (canAssignRoles && selectedRole?.key === 'admin_master' && !user.is_root) {
+      setEditError('Somente ROOT pode atribuir a função global admin_master.')
+      return
+    }
+
+    setEditSaving(true)
+    setEditError(null)
+    setError(null)
+    setSuccess(null)
+    try {
+      const { data: updatedPerson, error: personError } = await supabase
+        .from('people')
+        .update({ nome: normalizedName })
+        .eq('id', editing.person_id)
+        .select('id')
+        .maybeSingle()
+      if (personError) throw personError
+      if (!updatedPerson) {
+        throw new Error('O nome não foi atualizado. Verifique suas permissões e tente novamente.')
+      }
+
+      if (canAssignRoles && selectedRole && selectedRole.id !== editing.role_id) {
+        if (!user.is_root) {
+          const ownRole = roles.find((role) => role.key === user.papel)
+          if (ownRole && selectedRole.nivel >= ownRole.nivel) {
+            throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
+          }
+          if (selectedRole.sistema) {
+            throw new Error('Funções de sistema só podem ser atribuídas por ROOT.')
+          }
+        }
+
+        const { error: membershipError } = await supabase
+          .from('tenant_memberships')
+          .update({ role_id: selectedRole.id, papel: selectedRole.key })
+          .eq('id', editing.id)
+          .eq('tenant_id', editing.tenant_id)
+        if (membershipError) throw membershipError
+      }
+
+      setEditing(null)
+      setSuccess('Dados do usuário atualizados.')
+      await loadData('users')
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : 'Não foi possível salvar as alterações.')
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -197,14 +288,26 @@ export function AdminManagementPage() {
                       <td><span className="remocao-status">{m.status}</span></td>
                       <td>{m.aprovado_em ? new Date(m.aprovado_em).toLocaleDateString('pt-BR') : '—'}</td>
                       <td>
-                        {m.status === 'pendente' && (
+                        <div className="remocao-admin-row-actions">
                           <button
-                            onClick={() => handleApprove(m.id)}
-                            className="remocao-btn remocao-btn--sm remocao-btn--primary"
+                            type="button"
+                            onClick={() => void openEdit(m)}
+                            className="remocao-btn remocao-btn--sm remocao-btn--ghost"
+                            aria-label={`Editar usuário ${m.person?.nome || m.person_id}`}
                           >
-                            Aprovar
+                            <Pencil size={14} />
+                            Editar
                           </button>
-                        )}
+                          {m.status === 'pendente' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleApprove(m.id)}
+                              className="remocao-btn remocao-btn--sm remocao-btn--primary"
+                            >
+                              Aprovar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -264,6 +367,60 @@ export function AdminManagementPage() {
               </table>
             </div>
           )
+        )}
+
+        {editing && (
+          <div className="remocao-admin-modal-backdrop" role="presentation" onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !editSaving) setEditing(null)
+          }}>
+            <section className="remocao-admin-modal" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+              <header className="remocao-admin-modal__header">
+                <div>
+                  <p className="remocao-eyebrow">GESTÃO DE ACESSO</p>
+                  <h2 id="edit-user-title">Editar usuário</h2>
+                  <p>Atualize a identificação e, quando autorizado, a função deste vínculo.</p>
+                </div>
+                <button type="button" className="remocao-btn remocao-btn--ghost remocao-btn--icon" aria-label="Fechar edição" disabled={editSaving} onClick={() => setEditing(null)}>
+                  <X size={18} />
+                </button>
+              </header>
+              <form className="remocao-form-grid remocao-admin-edit-form" onSubmit={handleSaveEdit} noValidate>
+                {editError && <div className="remocao-alert remocao-alert--danger" role="alert">{editError}</div>}
+                <div className="remocao-field">
+                  <label htmlFor="admin-edit-name">Nome completo</label>
+                  <input id="admin-edit-name" name="name" autoComplete="name" value={editName} onChange={(event) => setEditName(event.target.value)} minLength={2} maxLength={160} required aria-invalid={Boolean(editError && editName.trim().length < 2)} />
+                </div>
+                <div className="remocao-field">
+                  <label htmlFor="admin-edit-email">E-mail de acesso</label>
+                  <input id="admin-edit-email" type="email" value={editing.person?.email || ''} readOnly aria-describedby="admin-edit-email-help" />
+                  <small id="admin-edit-email-help">A troca do e-mail de autenticação exige um fluxo seguro de confirmação; não será alterada apenas no cadastro.</small>
+                </div>
+                <div className="remocao-field">
+                  <label htmlFor="admin-edit-role">Função no vínculo</label>
+                  <select
+                    id="admin-edit-role"
+                    value={editRoleId}
+                    onChange={(event) => setEditRoleId(event.target.value)}
+                    disabled={!canAssignRoles || editing.person_id === user?.id || editing.papel === 'admin_master' || !roles.length}
+                  >
+                    {roles.filter((role) => user?.is_root || (!role.sistema && role.key !== 'admin_master' && role.nivel < (roles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER))).map((role) => (
+                      <option key={role.id} value={role.id}>{role.nome} · nível {role.nivel}</option>
+                    ))}
+                  </select>
+                  {!canAssignRoles && <small>Seu perfil pode editar a identificação, mas não atribuir funções.</small>}
+                  {editing.person_id === user?.id && <small>Não é permitido alterar a própria função por esta tela.</small>}
+                  {(editing.papel === 'admin_master' || editing.role?.key === 'admin_master') && <small>O vínculo ROOT é protegido e não pode ser alterado por esta tela.</small>}
+                </div>
+                <div className="remocao-form-actions">
+                  <button type="button" className="remocao-btn remocao-btn--ghost" disabled={editSaving} onClick={() => setEditing(null)}>Cancelar</button>
+                  <button type="submit" className="remocao-btn remocao-btn--primary" disabled={editSaving}>
+                    <Save size={16} />
+                    {editSaving ? 'Salvando…' : 'Salvar alterações'}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
         )}
 
         <footer className="remocao-admin-pagination">
