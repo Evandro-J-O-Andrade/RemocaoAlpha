@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/app/providers/AuthProvider'
+import { hasEffectivePermission } from '@/modules/remocao/permissions/rbac'
+import { Perm } from '@/modules/remocao/permissions'
 import { clsx } from 'clsx'
 import { Search, Filter, RefreshCw, Plus, BarChart3, List, Inbox, ClipboardList, Users, Ambulance, AlertCircle, CheckCircle } from 'lucide-react'
 import { useRemocao } from '@/modules/remocao/context/RemocaoContext'
@@ -9,6 +12,8 @@ import { RemocaoCard } from '@/modules/remocao/components/RemocaoCard'
 import { FilaOperacional } from '@/modules/remocao/components/FilaOperacional'
 
 export function CentralRemocoesPage() {
+  const { user } = useAuth()
+  const canCreateRemocao = !!user && hasEffectivePermission(user.permissions, user.is_root, Perm.REMOCACAO_SOLICITAR)
   const {
     remocoes,
     filteredRemocoes,
@@ -65,10 +70,12 @@ export function CentralRemocoesPage() {
             >
               {viewMode === 'cards' ? <BarChart3 size={16} /> : <List size={16} />}
             </button>
-            <Link to="/nova-remocao" className="remocao-btn remocao-btn--primary">
-              <Plus size={18} />
-              Nova Remoção
-            </Link>
+            {canCreateRemocao && (
+              <Link to="/nova-remocao" className="remocao-btn remocao-btn--primary">
+                <Plus size={18} />
+                Nova Remoção
+              </Link>
+            )}
           </div>
         </div>
 
