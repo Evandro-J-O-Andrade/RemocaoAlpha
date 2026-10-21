@@ -256,8 +256,8 @@ html.dark {
 
 .remocao-btn--danger-outline {
   color: var(--rem-danger);
-  background: #fff;
-  border-color: #f0b9b4;
+  background: var(--rem-surface);
+  border-color: color-mix(in srgb, var(--rem-danger) 35%, var(--rem-border));
 }
 
 .remocao-btn--ghost {
@@ -268,7 +268,7 @@ html.dark {
 
 .remocao-btn--ghost:hover:not(:disabled) {
   color: var(--rem-text);
-  background: #edf2f7;
+  background: var(--rem-surface-muted);
 }
 
 .remocao-btn--sm {
@@ -291,7 +291,7 @@ html.dark {
   flex: 0 0 auto;
   place-items: center;
   color: var(--rem-text-muted);
-  background: #fff;
+  background: var(--rem-surface);
   border: 1px solid var(--rem-border);
   border-radius: 10px;
   cursor: pointer;
@@ -465,7 +465,7 @@ html.dark {
 }
 
 .remocao-field__label {
-  color: #34445a;
+  color: var(--rem-text);
   font-size: 12px;
   font-weight: 750;
 }
@@ -487,7 +487,7 @@ html.dark {
   width: 100%;
   min-width: 0;
   color: var(--rem-text);
-  background: #fff;
+  background: var(--rem-surface);
   border: 1px solid var(--rem-border-strong);
   border-radius: 9px;
   outline: none;
