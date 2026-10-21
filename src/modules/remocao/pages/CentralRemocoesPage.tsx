@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { Search, Filter, RefreshCw, Plus, BarChart3, List, Inbox, ClipboardList, Users, Ambulance, AlertCircle, CheckCircle } from 'lucide-react'
 import { useRemocao } from '@/modules/remocao/context/RemocaoContext'
@@ -64,10 +65,10 @@ export function CentralRemocoesPage() {
             >
               {viewMode === 'cards' ? <BarChart3 size={16} /> : <List size={16} />}
             </button>
-            <button className="remocao-btn remocao-btn--primary">
+            <Link to="/nova-remocao" className="remocao-btn remocao-btn--primary">
               <Plus size={18} />
               Nova Remoção
-            </button>
+            </Link>
           </div>
         </div>
 
