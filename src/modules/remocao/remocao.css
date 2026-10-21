@@ -2072,3 +2072,131 @@ html.dark {
     padding: 15px;
   }
 }
+
+
+/* Administração SaaS: navegação compacta, tabelas operacionais e paginação real */
+.remocao-admin-page {
+  width: min(100%, 1480px);
+  margin-inline: auto;
+}
+
+.remocao-admin-page .remocao-page__header {
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+
+.remocao-admin-page .remocao-page__title {
+  letter-spacing: -0.035em;
+}
+
+.remocao-admin-tabs {
+  margin-bottom: 18px;
+  padding: 5px;
+  border: 1px solid var(--rem-border);
+  border-radius: 11px;
+  background: var(--rem-surface-muted);
+}
+
+.remocao-admin-tab {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--rem-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease;
+}
+
+.remocao-admin-tab:hover {
+  color: var(--rem-text);
+  background: var(--rem-surface);
+}
+
+.remocao-admin-tab:focus-visible {
+  outline: 2px solid var(--rem-primary);
+  outline-offset: 2px;
+}
+
+.remocao-admin-tab--active {
+  color: var(--rem-text);
+  border-color: var(--rem-border);
+  background: var(--rem-surface);
+  box-shadow: 0 1px 2px rgb(15 23 42 / .06);
+}
+
+.remocao-admin-page .remocao-table-wrap {
+  border-radius: 10px;
+  box-shadow: var(--rem-shadow-sm, 0 1px 2px rgb(15 23 42 / .04));
+}
+
+.remocao-admin-page .remocao-table {
+  min-width: 760px;
+}
+
+.remocao-admin-page .remocao-table thead th {
+  padding: 11px 14px;
+  color: var(--rem-text-muted);
+  background: var(--rem-surface-muted);
+  font-size: 10px;
+  letter-spacing: .065em;
+}
+
+.remocao-admin-page .remocao-table tbody td {
+  padding: 13px 14px;
+  color: var(--rem-text);
+  font-size: 12px;
+}
+
+.remocao-admin-page .remocao-table tbody tr:hover {
+  background: var(--rem-surface-muted);
+}
+
+.remocao-admin-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 2px;
+  color: var(--rem-text-muted);
+}
+
+.remocao-admin-pagination__summary {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.remocao-admin-page button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+@media (max-width: 640px) {
+  .remocao-admin-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .remocao-admin-tabs nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .remocao-admin-tab {
+    padding-inline: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .remocao-admin-tab {
+    transition: none;
+  }
+}
