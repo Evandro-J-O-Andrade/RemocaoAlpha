@@ -71,6 +71,7 @@ export function Cid10Select({ value: _value, onChange }: { value?: string, onCha
           {resultados.map(r => (
             <button
               key={r.codigo}
+              type="button"
               onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.descricao) }}
               className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm text-white"
             >
@@ -104,6 +105,7 @@ export function SigtapSelect({ value: _value, onChange }: { value?: string, onCh
           {resultados.map(r => (
             <button
               key={`${r.codigo}-${r.competencia}`}
+              type="button"
               onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.nome) }}
               className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm"
             >
@@ -135,7 +137,7 @@ export function CboSelect({ value: _value, onChange }: { value?: string, onChang
       {resultados.length > 0 && (
         <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
           {resultados.map(r => (
-            <button key={r.codigo} onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.titulo) }} className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm text-white">
+            <button key={r.codigo} type="button" onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.titulo) }} className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm text-white">
               <span className="font-mono text-blue-400">{r.codigo}</span> - {r.titulo}
             </button>
           ))}
