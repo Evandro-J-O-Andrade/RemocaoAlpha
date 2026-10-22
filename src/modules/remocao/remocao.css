@@ -2391,4 +2391,16 @@ html.dark .remocao-textarea {
 html.dark .remocao-input::placeholder,
 html.dark .remocao-textarea::placeholder {
   color: var(--rem-text-muted);
+}.driver-action-btn {
+  min-height: 56px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  border-radius: 20px;
+  transition: all 0.2s;
 }
+.driver-action-btn:active { transform: scale(0.98); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.sidebar-desktop { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.sidebar-mobile-overlay { backdrop-filter: blur(8px); }
+@keyframes slide-in-from-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.animate-slide-in { animation: slide-in-from-left 0.3s ease-out; }
