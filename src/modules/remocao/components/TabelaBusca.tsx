@@ -61,10 +61,10 @@ export function Cid10Select({ value: _value, onChange }: { value?: string, onCha
       <input
         value={query}
         onChange={e => setQuery(e.target.value)}
-        placeholder="Digite CID ou descrição - ex: J18.9 ou Pneumonia"
+        placeholder="Digite CID ou descricao - ex: J18.9 ou Pneumonia"
         className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:border-yellow-400 outline-none"
       />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando…</p>}
+      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
       {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
       {resultados.length > 0 && (
         <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
@@ -97,7 +97,7 @@ export function SigtapSelect({ value: _value, onChange }: { value?: string, onCh
         placeholder="Ex: 0205020038 ou ULTRASSOM ABDOMEN"
         className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:border-yellow-400 outline-none"
       />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando…</p>}
+      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
       {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
       {resultados.length > 0 && (
         <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
@@ -123,14 +123,14 @@ export function CboSelect({ value: _value, onChange }: { value?: string, onChang
 
   return (
     <div className="relative">
-      <label className="text-xs text-slate-400">CBO - Classificação Brasileira de Ocupações (para equipe)</label>
+      <label className="text-xs text-slate-400">CBO - Classificacao Brasileira de Ocupacoes (para equipe)</label>
       <input
         value={query}
         onChange={e => setQuery(e.target.value)}
-        placeholder="Ex: 515135 Socorrista, 223505 Enfermeiro, 225125 Médico clínico"
+        placeholder="Ex: 515135 Socorrista, 223505 Enfermeiro, 225125 Medico clinico"
         className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm"
       />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando…</p>}
+      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
       {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
       {resultados.length > 0 && (
         <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
@@ -153,7 +153,7 @@ export function ExameExternoForm() {
   return (
     <div className="space-y-4 p-4 bg-[#020617] border border-white/5 rounded-2xl">
       <h3 className="font-bold text-white">Exame Externo - Vincula CID-10 + SIGTAP + CBO</h3>
-      <p className="text-xs text-slate-400">Quando paciente vai pra exame externo (UBS ? Hospital ? Clínica), precisa CID (por que faz) + SIGTAP (o que faz) + CBO (quem faz)</p>
+      <p className="text-xs text-slate-400">Quando paciente vai pra exame externo (UBS - Hospital - Clinica), precisa CID (por que faz) + SIGTAP (o que faz) + CBO (quem faz)</p>
 
       <Cid10Select onChange={setCid} />
       <SigtapSelect onChange={setSigtap} />
