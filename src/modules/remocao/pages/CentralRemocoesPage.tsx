@@ -185,7 +185,7 @@ export function CentralRemocoesPage() {
 
         <section aria-label="Indicadores operacionais" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard label="Viaturas disponíveis" value={fleetLoading ? '—' : fleet.available} detail={fleetLoading ? 'Consultando frota…' : `De ${fleet.total} veículos cadastrados`} icon={Truck} tone="success" />
-          <MetricCard label="Em transporte" value={loading ? '—' : pipelineCounts.transito} detail="Remoções em deslocamento, chegada ou retorno" icon={Ambulance} tone="info" />
+          <MetricCard label="Viaturas ocupadas" value={fleetLoading ? '—' : fleet.active} detail={loading ? "Consultando operações…" : `${pipelineCounts.transito} remoção(ões) em trânsito`} icon={Ambulance} tone="info" />
           <MetricCard label="Espera média atual" value={loading ? '—' : averageWait === null ? '0 min' : durationLabel(averageWait)} detail="Média da espera das solicitações ainda não em trânsito" icon={Clock3} tone={averageWait !== null && averageWait >= 15 ? 'warning' : 'neutral'} />
           <MetricCard label="Críticas ativas" value={loading ? '—' : criticalCount} detail="Emergenciais ou com intercorrência" icon={ShieldAlert} tone={criticalCount ? 'danger' : 'success'} />
           <MetricCard label="Espera ≥ 15 min" value={loading ? '—' : delayedCount} detail="Alerta operacional de fila, não SLA contratual" icon={AlertTriangle} tone={delayedCount ? 'warning' : 'neutral'} />
