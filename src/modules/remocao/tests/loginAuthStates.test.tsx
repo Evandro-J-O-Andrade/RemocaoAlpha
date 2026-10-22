@@ -7,6 +7,36 @@ import { ThemeProvider } from '@/app/providers/ThemeProvider'
 import { LoginPage } from '@/modules/remocao/pages/LoginPage'
 import { supabase } from '@/lib/supabase/client'
 
+// Login não depende de animação. Mockar Motion neste teste evita que happy-dom
+// gere AbortError não tratado ao cancelar animações durante o unmount dos testes.
+vi.mock('framer-motion', async () => {
+  const React = await import('react')
+  const motionProps = new Set([
+    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileFocus', 'whileInView', 'viewport', 'layout', 'layoutId',
+  ])
+  const components = new Map<string, any>()
+  const motion = new Proxy({}, {
+    get: (_target, tag: string) => {
+      if (!components.has(tag)) {
+        const Component = React.forwardRef<HTMLElement, Record<string, unknown>>((props, ref) => {
+          const domProps = Object.fromEntries(
+            Object.entries(props).filter(([key]) => !motionProps.has(key) && key !== 'children'),
+          )
+          return React.createElement(tag, { ...domProps, ref }, props.children as React.ReactNode)
+        })
+        components.set(tag, Component)
+      }
+      return components.get(tag)
+    },
+  })
+  return {
+    motion,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+  }
+})
+
 const mockSignIn = supabase.auth.signInWithPassword as ReturnType<typeof vi.fn>
 const mockGetSession = supabase.auth.getSession as ReturnType<typeof vi.fn>
 const mockRpc = supabase.rpc as ReturnType<typeof vi.fn>
