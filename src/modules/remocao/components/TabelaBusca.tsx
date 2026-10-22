@@ -162,7 +162,7 @@ export function ExameExternoForm() {
 
       {cid && sigtap && (
         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300">
-          <strong>Faturamento OK:</strong> CID {cid.codigo} permite SIGTAP {sigtap.codigo}. Valor estimado R$ {sigtap.valor_total ?? sigtap.valor}
+          <strong>Compatibilidade nao verificada:</strong> CID {cid.codigo} e SIGTAP {sigtap.codigo} selecionados. A validacao de compatibilidade clinica/faturamento nao esta implementada.
         </div>
       )}
     </div>
