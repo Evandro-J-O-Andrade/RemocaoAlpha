@@ -6,6 +6,7 @@ import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X, Pap
 import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
 import { DestinoExternoPicker } from '@/modules/remocao/components/DestinoExternoPicker'
+import { Cid10Select } from '@/modules/remocao/components/TabelaBusca'
 
 const optionalUuid = z.preprocess(
   (value) => value === '' || value == null ? undefined : value,
@@ -118,6 +119,7 @@ export function SolicitacaoRemocaoForm({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<SolicitacaoFormValues>({
     resolver: zodResolver(solicitacaoSchema) as any,
@@ -314,6 +316,9 @@ export function SolicitacaoRemocaoForm({
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Diagnóstico</label>
             <input type="text" {...register('paciente_diagnostico')} className="w-full px-3 py-2 border border-border rounded" placeholder="CID + descrição" />
+            <div className="mt-2">
+              <Cid10Select onChange={(r) => setValue('paciente_diagnostico', `${r.codigo} - ${r.descricao}`)} />
+            </div>
           </div>
         </div>
 
