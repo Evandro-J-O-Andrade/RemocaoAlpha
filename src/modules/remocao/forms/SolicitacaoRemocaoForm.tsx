@@ -52,6 +52,16 @@ function toJsonList(value?: string) {
   return JSON.stringify((value ?? '').split(/[,;\n]/).map((item) => item.trim()).filter(Boolean))
 }
 
+function calculateAge(birthDate: string): number {
+  const birth = new Date(birthDate)
+  if (Number.isNaN(birth.getTime())) return 0
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const monthDiff = today.getMonth() - birth.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
+  return Math.max(0, age)
+}
+
 function toTimestamp(date?: string, time?: string, label = 'horário') {
   if (!time) return undefined
   if (!date) throw new Error(`Informe a data prevista antes de preencher ${label}.`)
@@ -122,6 +132,7 @@ export function SolicitacaoRemocaoForm({
   const origemUnidade = watch('origem_unidade_id')
   const destinoUnidade = watch('destino_unidade_id')
   const necessidadeMedica = watch('necessidade_medica')
+  const dataNascimento = watch('paciente_data_nascimento')
 
   useEffect(() => {
     RemocaoRepository.getUnidades(tenantId).then(({ data }) => {
@@ -287,6 +298,9 @@ export function SolicitacaoRemocaoForm({
           <div>
             <label className="block text-sm font-medium mb-1">Data de nascimento</label>
             <input type="date" {...register('paciente_data_nascimento')} className="w-full px-3 py-2 border border-border rounded" />
+            {dataNascimento && (
+              <span className="text-xs text-muted-foreground">Idade: {calculateAge(dataNascimento)} anos</span>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Sexo</label>
