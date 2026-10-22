@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Menu, User, ChevronLeft, LogOut, Settings } from 'lucide-react'
+import { Menu, User, ChevronLeft, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
 import { cn } from '@/lib/cn'
+import { Perm } from '@/modules/remocao/permissions'
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -11,6 +12,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+
+  const hasPerm = (p: string) => user?.permissions.includes(p as any) || user?.is_root
 
   return (
     <div className="auth-layout">
@@ -37,7 +40,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               className="auth-sidebar__logo-img"
             />
           </div>
-          {!sidebarOpen && !isMobile && (
+          {sidebarOpen && !isMobile && (
             <span className="auth-sidebar__brand-text">Remocao Alpha</span>
           )}
         </div>
@@ -45,42 +48,68 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <nav className="auth-sidebar__nav">
           <Link
             to="/"
-            className={cn('auth-sidebar__nav-item', sidebarOpen && 'auth-sidebar__nav-item--active')}
-            onClick={() => {
-              if (isMobile) setMobileMenuOpen(false)
-            }}
+            className="auth-sidebar__nav-item"
+            onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
           >
-            <span className="auth-sidebar__nav-icon">
-              <User size={18} />
-            </span>
+            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
             {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
           </Link>
           <Link
-            to="/account"
+            to="/nova-remocao"
             className="auth-sidebar__nav-item"
-            onClick={() => {
-              if (isMobile) setMobileMenuOpen(false)
-            }}
+            onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
           >
-            <span className="auth-sidebar__nav-icon">
-              <User size={18} />
-            </span>
-            {sidebarOpen && <span className="auth-sidebar__nav-label">Minha Conta</span>}
+            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+            {sidebarOpen && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
           </Link>
-          {user?.is_root && (
-<Link
-            to="/admin"
-            className="auth-sidebar__nav-item"
-            onClick={() => {
-              if (isMobile) setMobileMenuOpen(false)
-            }}
-          >
-              <span className="auth-sidebar__nav-icon">
-                <Settings size={18} />
-              </span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Admin</span>}
+          {hasPerm(Perm.RELATORIO_VISUALIZAR) && (
+            <Link
+              to="/relatorios"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><FileText size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Relatorios</span>}
             </Link>
           )}
+          {hasPerm(Perm.DASHBOARD_VISUALIZAR) && (
+            <Link
+              to="/dashboard-analitico"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><BarChart3 size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Dashboard Analitico</span>}
+            </Link>
+          )}
+          {hasPerm(Perm.ADMIN_USERS_MANAGE) && (
+            <Link
+              to="/admin"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><Users size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Gestao de Acessos</span>}
+            </Link>
+          )}
+          {user?.is_root && (
+            <Link
+              to="/admin"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><Shield size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Administracao Global</span>}
+            </Link>
+          )}
+          <Link
+            to="/account"
+            className="auth-sidebar__nav-item"
+            onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+          >
+            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+            {sidebarOpen && <span className="auth-sidebar__nav-label">Minha Conta</span>}
+          </Link>
         </nav>
 
         <div className="auth-sidebar__footer">
@@ -108,7 +137,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             aria-label="Sair da conta"
           >
             <LogOut size={18} />
-            {sidebarOpen && <span>Encerrar sessão</span>}
+            {sidebarOpen && <span>Encerrar sessao</span>}
           </button>
         </div>
       </aside>
@@ -123,7 +152,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
           </button>
           <div className="auth-header__title">
-            <h1 className="auth-header__title-text">Gestão de Remoção Alpha</h1>
+            <h1 className="auth-header__title-text">Gestao de Remocao Alpha</h1>
           </div>
           <div className="auth-header__actions">
             <div className="auth-header__organization">
