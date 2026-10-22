@@ -2494,3 +2494,140 @@ html.dark {
     width: 100%;
   }
 }
+
+
+/* Harmonização visual do módulo em tema escuro.
+   Neutraliza utilitários Tailwind de superfície clara usados em componentes legados,
+   sem alterar o tema claro nem estilos fora do módulo. */
+html.dark .remocao-module .bg-white,
+html.dark .remocao-driver-app .bg-white {
+  background-color: var(--rem-surface) !important;
+  color: var(--rem-text);
+}
+
+html.dark .remocao-module .bg-slate-50,
+html.dark .remocao-module .bg-gray-50,
+html.dark .remocao-driver-app .bg-slate-50,
+html.dark .remocao-driver-app .bg-gray-50 {
+  background-color: var(--rem-surface-muted) !important;
+}
+
+html.dark .remocao-module .text-slate-900,
+html.dark .remocao-module .text-slate-800,
+html.dark .remocao-module .text-gray-900,
+html.dark .remocao-module .text-gray-800,
+html.dark .remocao-driver-app .text-slate-900,
+html.dark .remocao-driver-app .text-slate-800,
+html.dark .remocao-driver-app .text-gray-900,
+html.dark .remocao-driver-app .text-gray-800 {
+  color: var(--rem-text) !important;
+}
+
+html.dark .remocao-module .text-slate-700,
+html.dark .remocao-module .text-slate-600,
+html.dark .remocao-module .text-slate-500,
+html.dark .remocao-module .text-gray-700,
+html.dark .remocao-module .text-gray-600,
+html.dark .remocao-module .text-gray-500,
+html.dark .remocao-driver-app .text-slate-700,
+html.dark .remocao-driver-app .text-slate-600,
+html.dark .remocao-driver-app .text-slate-500,
+html.dark .remocao-driver-app .text-gray-700,
+html.dark .remocao-driver-app .text-gray-600,
+html.dark .remocao-driver-app .text-gray-500 {
+  color: var(--rem-text-muted) !important;
+}
+
+html.dark .remocao-module .border-slate-100,
+html.dark .remocao-module .border-slate-200,
+html.dark .remocao-module .border-gray-100,
+html.dark .remocao-module .border-gray-200,
+html.dark .remocao-driver-app .border-slate-100,
+html.dark .remocao-driver-app .border-slate-200,
+html.dark .remocao-driver-app .border-gray-100,
+html.dark .remocao-driver-app .border-gray-200 {
+  border-color: var(--rem-border) !important;
+}
+
+/* Conteúdo operacional: permitir que tabelas densas rolem horizontalmente
+   em telas estreitas, sem comprimir os dados até ficarem ilegíveis. */
+.remocao-module .remocao-table-wrap,
+.remocao-driver-app .remocao-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.remocao-module .remocao-table,
+.remocao-driver-app .remocao-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.remocao-module .remocao-table thead th,
+.remocao-driver-app .remocao-table thead th {
+  color: var(--rem-text-muted);
+  background: var(--rem-surface-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .045em;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.remocao-module .remocao-table tbody td,
+.remocao-driver-app .remocao-table tbody td {
+  color: var(--rem-text);
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.remocao-module .remocao-table tbody tr + tr td,
+.remocao-driver-app .remocao-table tbody tr + tr td {
+  border-top: 1px solid var(--rem-border);
+}
+
+.remocao-module .remocao-card,
+.remocao-driver-app .remocao-card {
+  color: var(--rem-text);
+}
+
+.remocao-module .remocao-tabs,
+.remocao-driver-app .remocao-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.remocao-module :is(input, select, textarea):focus-visible,
+.remocao-driver-app :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--rem-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .remocao-module .remocao-page,
+  .remocao-driver-app .remocao-page {
+    padding: 14px;
+  }
+
+  .remocao-module .remocao-card,
+  .remocao-driver-app .remocao-card {
+    padding: 14px;
+    border-radius: var(--rem-radius-md);
+  }
+
+  .remocao-module .remocao-page__header,
+  .remocao-driver-app .remocao-page__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .remocao-module .remocao-page__actions,
+  .remocao-driver-app .remocao-page__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
