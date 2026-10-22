@@ -2380,3 +2380,117 @@ html.dark {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Contrato visual para formulários embutidos nas páginas/mini landing pages de remoção.
+   Não depende das classes utilitárias do markup para manter controles legíveis. */
+.remocao-module form:not(.remocao-form--unstyled) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--rem-text);
+}
+
+.remocao-module form:not(.remocao-form--unstyled) label {
+  color: var(--rem-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.remocao-module form:not(.remocao-form--unstyled) select,
+.remocao-module form:not(.remocao-form--unstyled) textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border: 1px solid var(--rem-border-strong, var(--rem-border));
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: none;
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) input::placeholder,
+.remocao-module form:not(.remocao-form--unstyled) textarea::placeholder {
+  color: var(--rem-text-muted);
+  opacity: 1;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) input:focus-visible,
+.remocao-module form:not(.remocao-form--unstyled) select:focus-visible,
+.remocao-module form:not(.remocao-form--unstyled) textarea:focus-visible {
+  outline: 2px solid var(--rem-primary);
+  outline-offset: 1px;
+  border-color: var(--rem-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rem-primary) 16%, transparent);
+}
+
+.remocao-module form:not(.remocao-form--unstyled) input[type="checkbox"],
+.remocao-module form:not(.remocao-form--unstyled) input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--rem-primary);
+}
+
+.remocao-module form:not(.remocao-form--unstyled) input[type="file"] {
+  max-width: 100%;
+  color: var(--rem-text);
+  font-size: 12px;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) button[type="submit"] {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid var(--rem-primary);
+  border-radius: 9px;
+  background: var(--rem-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: filter .16s ease, opacity .16s ease, transform .16s ease;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) button[type="submit"]:hover:not(:disabled) {
+  filter: brightness(.94);
+}
+
+.remocao-module form:not(.remocao-form--unstyled) button[type="submit"]:focus-visible {
+  outline: 2px solid var(--rem-primary);
+  outline-offset: 3px;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) button:disabled,
+.remocao-module form:not(.remocao-form--unstyled) input:disabled,
+.remocao-module form:not(.remocao-form--unstyled) select:disabled,
+.remocao-module form:not(.remocao-form--unstyled) textarea:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.remocao-module form:not(.remocao-form--unstyled) [aria-invalid="true"] {
+  border-color: var(--rem-danger);
+}
+
+@media (max-width: 640px) {
+  .remocao-module form:not(.remocao-form--unstyled) {
+    gap: 13px;
+  }
+
+  .remocao-module form:not(.remocao-form--unstyled) button[type="submit"] {
+    width: 100%;
+  }
+}
