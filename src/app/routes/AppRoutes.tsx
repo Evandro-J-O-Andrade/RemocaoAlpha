@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom'
 import { LoginPage } from '@/modules/remocao/pages/LoginPage'
 import { CentralRemocoesPage } from '@/modules/remocao/pages/CentralRemocoesPage'
 import { NovaRemocaoPage } from '@/modules/remocao/pages/NovaRemocaoPage'
+import { PacientesPage } from '@/modules/remocao/pages/PacientesPage'
 import { RemocaoDetailPage } from '@/modules/remocao/pages/RemocaoDetailPage'
 import { DriverInterface } from '@/modules/remocao/pages/DriverInterface'
 import { AdminManagementPage } from '@/modules/remocao/pages/AdminManagementPage'
@@ -76,6 +77,15 @@ export function AppRoutes() {
             element={
               <RequirePermission permissions={[Perm.DASHBOARD_VISUALIZAR, Perm.REMOCACAO_VISUALIZAR]}>
                 <CentralRemocoesPage />
+              </RequirePermission>
+            }
+          />
+
+          <Route
+            path="/pacientes"
+            element={
+              <RequirePermission permissions={[Perm.REMOCACAO_VISUALIZAR]}>
+                <PacientesPage />
               </RequirePermission>
             }
           />

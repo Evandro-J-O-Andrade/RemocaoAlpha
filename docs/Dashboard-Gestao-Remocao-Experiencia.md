@@ -1,7 +1,27 @@
-# Dashboard Gestão de Remoção — Experiência (HTML de referência)
+# Dashboard — Experiencia da Gestao (Markdown nativo)
 
-Arquivo original: `docs/Dashboard-Gestao-Remocao-Experiencia.html`
+> Origem: `docs/Dashboard-Gestao-Remocao-Experiencia.html` (prototipo). Dados ilustrativos.
 
-O HTML original é um bundle minificado de aplicação React (protótipo visual), não documentação textual legível. Não foi possível extrair seções, tabelas ou requisitos de forma confiável nesta conversão.
+## 1. Visoes
 
-Limitação: o conteúdo funcional/visual só pode ser recuperado executando/renderizando o HTML original. Manter o HTML como referência visual.
+Gestao, Motorista, Enfermagem, Medico, Administracao.
+
+## 2. Central de comando
+
+Fila de remocoes com paciente, origem/destino, equipe, status, custo. Vaga Zero. Eventos da remocao. Conferencia de equipe e checklist. Evolucao assistencial. Registros de chegada/partida.
+
+## 3. Cadastros
+
+Unidades, integracoes, SIGTAP, relatorios CROSS.
+
+## 4. Indicadores
+
+KPIs operacionais alimentados por dados reais do Supabase. Distribuicoes por status, unidade, transporte. Filtros por periodo e escopo de acesso.
+
+## 5. Administração
+
+Gestao de acessos, tenants, unidades, setores. CRUD por permissao. Isolamento por tenant/unidade.
+
+## 6. CSS / identidade
+
+Tokens em `remocao.css` e `tokens.css`. Sidebar compacta, tema claro/escuro, Lucide icons.
