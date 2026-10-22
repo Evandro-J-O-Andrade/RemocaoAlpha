@@ -229,11 +229,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 5. Carregar permissoes efetivas
       let permissions: PermissionKey[] = []
+      let permissionsLoadError: { message?: string; code?: string } | null = null
       if (isRoot) {
         permissions = Object.values(Perm) as PermissionKey[]
       } else {
         const { data: perms, error: permsErr } = await supabase.rpc('get_user_permissions')
-        if (!permsErr && perms) {
+        if (permsErr) {
+          // Do not misreport an RPC failure as a legitimate empty permission set.
+          permissionsLoadError = permsErr
+        } else if (perms) {
           permissions = (perms as any[])
             .map((p) => (typeof p === 'string' ? p : p.permission_key))
             .filter(Boolean) as PermissionKey[]
@@ -245,7 +249,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 7. Determinar status
       let resolvedStatus: AuthStatus
-      if (isRoot) {
+      if (permissionsLoadError) {
+        resolvedStatus = 'error'
+      } else if (isRoot) {
         resolvedStatus = 'ready'
       } else if (!activeTenant && memberships.length === 0) {
         resolvedStatus = 'no_tenant'
@@ -288,7 +294,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(resolvedUser)
       setStage('authenticated')
       setStatus(resolvedStatus)
-      setError(null)
+      setError(
+        permissionsLoadError
+          ? makeAuthError(
+              'authorizing',
+              'Não foi possível validar suas permissões no servidor. Tente novamente.',
+              { code: permissionsLoadError.code, retryable: true }
+            )
+          : null
+      )
     } catch (err: any) {
       setUser(null)
       setStage('error')
