@@ -264,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // 9. Username: people.full_name com fallback para email
-      const username = pessoaNome || (emailFromAuth || '')
+      const username = pessoaNome || 'Usuário'
 
       // 10. Email: da identidade autenticada (Supabase Auth)
       const email = emailFromAuth || (personData?.email || '')
