@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Menu, User, ChevronLeft, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react'
+import { Ambulance, Plus, FileText, BarChart3, Users, Shield, User, ChevronLeft, LogOut, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { OrganizationSwitcher } from '@/modules/remocao/components/OrganizationSwitcher'
@@ -51,7 +51,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             className="auth-sidebar__nav-item"
             onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
           >
-            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+            <span className="auth-sidebar__nav-icon"><Ambulance size={18} /></span>
             {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
           </Link>
           <Link
@@ -59,7 +59,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             className="auth-sidebar__nav-item"
             onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
           >
-            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+            <span className="auth-sidebar__nav-icon"><Plus size={18} /></span>
             {sidebarOpen && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
           </Link>
           {hasPerm(Perm.RELATORIO_VISUALIZAR) && (
