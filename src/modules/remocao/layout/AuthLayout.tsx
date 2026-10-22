@@ -94,7 +94,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           )}
           {user?.is_root && (
             <Link
-              to="/admin"
+              to="/admin?scope=global"
               className="auth-sidebar__nav-item"
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
