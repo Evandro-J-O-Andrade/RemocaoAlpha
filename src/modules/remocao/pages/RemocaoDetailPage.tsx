@@ -25,6 +25,7 @@ export function RemocaoDetailPage() {
   const [motoristaData, setMotoristaData] = useState<{ motoristas: any[]; veiculos: any[] }>(({ motoristas: [], veiculos: [] }))
   const [checklistProgress, setChecklistProgress] = useState({ checked: 0, total: 0 })
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -36,21 +37,46 @@ export function RemocaoDetailPage() {
   useEffect(() => {
     if (!user || !id) return
 
-    const fetchRemocao = async () => {
-      const { data } = await supabase
-        .from('remocao_dashboard')
-        .select('*')
-        .eq('id', id)
-        .eq('tenant_id', user.tenant_id)
-        .maybeSingle()
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
+    setRemocao(null)
 
-      if (data) {
+    const fetchRemocao = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('remocao_dashboard')
+          .select('*')
+          .eq('id', id)
+          .eq('tenant_id', user.tenant_id)
+          .maybeSingle()
+
+        if (cancelled) return
+
+        if (error) {
+          console.error('Falha ao carregar remoção:', error)
+          setLoadError('Não foi possível carregar os dados desta remoção. Verifique sua conexão e tente novamente.')
+          return
+        }
+
+        if (!data) {
+          setLoadError('Remoção não encontrada ou sem acesso para este usuário.')
+          return
+        }
+
         setRemocao(data as RemocaoDashboardView)
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Falha inesperada ao carregar remoção:', error)
+          setLoadError('Ocorreu uma falha inesperada ao carregar esta remoção.')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      setLoading(false)
     }
 
     void fetchRemocao()
+    return () => { cancelled = true }
   }, [id, user])
 
   useEffect(() => {
@@ -104,13 +130,48 @@ export function RemocaoDetailPage() {
 
   if (!user) return null
 
-  if (loading || !remocao) {
+  if (loading) {
     return (
       <div className="remocao-module min-h-screen">
         <div className="remocao-page">
-          <div className="remocao-empty">
+          <div className="remocao-empty" role="status" aria-live="polite">
             <span className="remocao-spinner" />
             <p className="remocao-empty__text">Carregando remoção...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError || !remocao) {
+    return (
+      <div className="remocao-module min-h-screen">
+        <div className="remocao-page">
+          <div className="remocao-card" role="alert">
+            <div className="remocao-card__header">
+              <div>
+                <h1 className="remocao-page__title">Não foi possível abrir a remoção</h1>
+                <p className="remocao-text-muted" style={{ marginTop: '8px' }}>
+                  {loadError || 'Remoção não encontrada ou sem acesso para este usuário.'}
+                </p>
+              </div>
+            </div>
+            <div className="remocao-inline" style={{ marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="remocao-btn remocao-btn--primary"
+              >
+                Tentar novamente
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="remocao-btn remocao-btn--ghost"
+              >
+                Voltar à Central
+              </button>
+            </div>
           </div>
         </div>
       </div>
