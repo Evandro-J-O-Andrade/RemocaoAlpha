@@ -34,6 +34,10 @@ export function isRootRole(role: string): boolean {
   return role === 'admin_master'
 }
 
+/**
+ * A list of required permissions is an allow-list: any one grants access.
+ * Callers that require every permission must check those permissions separately.
+ */
 export function hasEffectivePermission(
   permissions: string[],
   isRoot: boolean,
@@ -41,5 +45,5 @@ export function hasEffectivePermission(
 ): boolean {
   if (isRoot) return true
   const requiredList = Array.isArray(required) ? required : [required]
-  return requiredList.every((p) => permissions.includes(p))
+  return requiredList.some((permission) => permissions.includes(permission))
 }
