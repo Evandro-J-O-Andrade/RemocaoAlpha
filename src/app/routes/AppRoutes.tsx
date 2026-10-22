@@ -5,7 +5,9 @@ import { NovaRemocaoPage } from '@/modules/remocao/pages/NovaRemocaoPage'
 import { RemocaoDetailPage } from '@/modules/remocao/pages/RemocaoDetailPage'
 import { DriverInterface } from '@/modules/remocao/pages/DriverInterface'
 import { AdminManagementPage } from '@/modules/remocao/pages/AdminManagementPage'
+import { GlobalAdministrationPage } from '@/modules/remocao/pages/GlobalAdministrationPage'
 import { ReportsPage } from '@/modules/remocao/pages/ReportsPage'
+import { ReportDetailPage } from '@/modules/remocao/pages/ReportDetailPage'
 import { DashboardAnaliticoPage } from '@/modules/remocao/pages/DashboardAnaliticoPage'
 import { AccountPage } from '@/modules/remocao/pages/AccountPage'
 import { RequireAuth, RequirePermission } from '@/app/routes/RequireAuth'
@@ -116,10 +118,28 @@ export function AppRoutes() {
           />
 
           <Route
-            path="/relatorios/*"
+            path="/admin/global"
+            element={
+              <RequirePermission permissions={Perm.ADMIN_TENANT_MANAGE}>
+                <GlobalAdministrationPage />
+              </RequirePermission>
+            }
+          />
+
+          <Route
+            path="/relatorios"
             element={
               <RequirePermission permissions={Perm.RELATORIO_VISUALIZAR}>
                 <ReportsPage />
+              </RequirePermission>
+            }
+          />
+
+          <Route
+            path="/relatorios/:reportId"
+            element={
+              <RequirePermission permissions={Perm.RELATORIO_VISUALIZAR}>
+                <ReportDetailPage />
               </RequirePermission>
             }
           />

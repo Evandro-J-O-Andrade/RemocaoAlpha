@@ -94,7 +94,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           )}
           {user?.is_root && (
             <Link
-              to="/admin?scope=global"
+              to="/admin/global"
               className="auth-sidebar__nav-item"
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
@@ -165,7 +165,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
         <footer className="auth-footer">
           <div className="auth-footer__content">
-            <span>© 2026 RemocaoAlpha — New Wave Sistema Digital</span>
+            <span>Â© 2026 RemocaoAlpha â€” New Wave Sistema Digital</span>
           </div>
         </footer>
       </div>

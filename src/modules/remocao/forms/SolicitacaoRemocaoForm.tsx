@@ -7,6 +7,11 @@ import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
 import { DestinoExternoPicker } from '@/modules/remocao/components/DestinoExternoPicker'
 
+const optionalUuid = z.preprocess(
+  (value) => value === '' || value == null ? undefined : value,
+  z.string().uuid().optional(),
+)
+
 const solicitacaoSchema = z.object({
   paciente_nome: z.string().min(3, 'Nome do paciente é obrigatório'),
   paciente_prontuario: z.string().optional(),
@@ -14,16 +19,17 @@ const solicitacaoSchema = z.object({
   paciente_sexo: z.enum(['masculino', 'feminino', 'outro', '']).optional(),
   paciente_diagnostico: z.string().optional(),
   paciente_condicao_clinica: z.enum(['estavel', 'instavel', 'grave', 'critico', 'emergencia']).default('estavel'),
-  paciente_precaucoes: z.array(z.string()).default([]),
-  paciente_alergias: z.array(z.string()).default([]),
+  // Os controles da interface são textos separados por vírgula; normalizamos para JSON no envio.
+  paciente_precaucoes: z.string().default(''),
+  paciente_alergias: z.string().default(''),
   paciente_necessidades_especiais: z.string().optional(),
 
-  origem_unidade_id: z.string().uuid().optional(),
-  origem_setor_id: z.string().uuid().optional(),
+  origem_unidade_id: optionalUuid,
+  origem_setor_id: optionalUuid,
   origem_leito: z.string().optional(),
 
-  destino_unidade_id: z.string().uuid().optional(),
-  destino_setor_id: z.string().uuid().optional(),
+  destino_unidade_id: optionalUuid,
+  destino_setor_id: optionalUuid,
   destino_endereco: z.string().optional(),
   destino_contato_nome: z.string().optional(),
   destino_contato_telefone: z.string().optional(),
@@ -41,6 +47,38 @@ const solicitacaoSchema = z.object({
 })
 
 export type SolicitacaoFormValues = z.infer<typeof solicitacaoSchema>
+
+function toJsonList(value?: string) {
+  return JSON.stringify((value ?? '').split(/[,;\n]/).map((item) => item.trim()).filter(Boolean))
+}
+
+function toTimestamp(date?: string, time?: string, label = 'horário') {
+  if (!time) return undefined
+  if (!date) throw new Error(`Informe a data prevista antes de preencher ${label}.`)
+  const parsed = new Date(`${date}T${time}:00`)
+  if (Number.isNaN(parsed.getTime())) throw new Error(`O valor informado para ${label} é inválido.`)
+  return parsed.toISOString()
+}
+
+function formatRemocaoError(error: unknown): string {
+  const value = error as { code?: string; message?: string } | null
+  switch (value?.code) {
+    case '42501':
+      return 'O banco recusou a operação por falta de autorização no contexto atual. Confira seu acesso, tenant e unidade. (42501)'
+    case '23503':
+      return 'Uma unidade, setor ou destino selecionado não existe mais ou não pertence ao contexto ativo. Atualize os campos e tente novamente. (23503)'
+    case '23502':
+      return 'O banco exige um campo que não foi preenchido. Revise os dados obrigatórios da solicitação. (23502)'
+    case '22P02':
+      return 'Um dos campos está em formato inválido. Confira especialmente identificadores, datas e horários. (22P02)'
+    case 'PGRST204':
+    case 'PGRST205':
+    case '42P01':
+      return 'A estrutura do banco parece estar desatualizada em relação ao sistema. É necessário verificar as migrations pendentes com o administrador técnico.'
+    default:
+      return `Não foi possível salvar a solicitação.${value?.message ? ` Detalhe: ${value.message}` : ''}${value?.code ? ` (código ${value.code})` : ''}`
+  }
+}
 
 export function SolicitacaoRemocaoForm({
   tenantId,
@@ -131,8 +169,8 @@ export function SolicitacaoRemocaoForm({
         paciente_sexo: data.paciente_sexo || null,
         paciente_diagnostico: data.paciente_diagnostico,
         paciente_condicao_clinica: data.paciente_condicao_clinica,
-        paciente_precaucoes: JSON.stringify(data.paciente_precaucoes),
-        paciente_alergias: JSON.stringify(data.paciente_alergias),
+        paciente_precaucoes: toJsonList(data.paciente_precaucoes),
+        paciente_alergias: toJsonList(data.paciente_alergias),
         paciente_necessidades_especiais: data.paciente_necessidades_especiais,
         origem_unidade_id: data.origem_unidade_id,
         origem_setor_id: data.origem_setor_id,
@@ -142,20 +180,22 @@ export function SolicitacaoRemocaoForm({
         destino_endereco: data.destino_endereco,
         destino_contato_nome: data.destino_contato_nome,
         destino_contato_telefone: data.destino_contato_telefone,
-        destino_externo_id: destinoExternoId,
+        // Só enviar a coluna quando houver um destino selecionado. Isso mantém
+        // o cadastro principal utilizável enquanto a migration opcional estiver pendente.
+        ...(destinoExternoId ? { destino_externo_id: destinoExternoId } : {}),
         finalidade: data.finalidade,
         prioridade: data.prioridade,
         tipo_transporte: data.tipo_transporte,
         nivel_suporte: data.nivel_suporte,
         necessidade_medica: data.necessidade_medica,
         justificativa_medica: data.justificativa_medica,
-        data_prevista: data.data_prevista,
-        horario_previsto_saida: data.horario_previsto_saida,
-        horario_previsto_atendimento: data.horario_previsto_atendimento,
+        data_prevista: data.data_prevista ? new Date(`${data.data_prevista}T00:00:00`).toISOString() : undefined,
+        horario_previsto_saida: toTimestamp(data.data_prevista, data.horario_previsto_saida, 'o horário previsto de saída'),
+        horario_previsto_atendimento: toTimestamp(data.data_prevista, data.horario_previsto_atendimento, 'o horário previsto do atendimento'),
       } as any)
 
       if (result.error || !result.data) {
-        const message = result.error?.message || 'Não foi possível criar a solicitação. Confira os dados e tente novamente.'
+        const message = result.error ? formatRemocaoError(result.error) : 'Não foi possível criar a solicitação. Confira os dados e tente novamente.'
         setSubmitError(message)
         onError?.(message)
         return
@@ -187,8 +227,7 @@ export function SolicitacaoRemocaoForm({
       setCreatedRemocaoId(null)
       onSuccess?.(result.data.id)
     } catch (error) {
-      const detail = error instanceof Error ? error.message : 'Erro inesperado ao salvar a solicitação.'
-      const message = `Não foi possível concluir a operação. ${detail}`
+      const message = formatRemocaoError(error)
       setSubmitError(message)
       onError?.(message)
     } finally {
@@ -213,6 +252,18 @@ export function SolicitacaoRemocaoForm({
 
   return (
     <form onSubmit={handleSubmitForm} className="space-y-6">
+      {Object.keys(errors).length > 0 && (
+        <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <p className="font-semibold">Não foi possível validar a solicitação. Corrija os campos abaixo:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            {Object.entries(errors).map(([field, error]) => {
+              const message = error?.message
+              return typeof message === 'string' ? <li key={field}>{message}</li> : null
+            })}
+          </ul>
+        </div>
+      )}
+
       {/* Patient section */}
       <fieldset className="border rounded-lg p-4">
         <legend className="px-2 text-sm font-medium text-foreground flex items-center gap-2">
@@ -273,11 +324,11 @@ export function SolicitacaoRemocaoForm({
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Precauções / Isolamento</label>
-            <input type="text" {...register('paciente_precaucoes')} className="w-full px-3 py-2 border border-border rounded" placeholder="Digite e pressione Enter para adicionar" />
+            <input type="text" {...register('paciente_precaucoes')} className="w-full px-3 py-2 border border-border rounded" placeholder="Separe múltiplas precauções por vírgula" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Alergias</label>
-            <input type="text" {...register('paciente_alergias')} className="w-full px-3 py-2 border border-border rounded" placeholder="Digite e pressione Enter para adicionar" />
+            <input type="text" {...register('paciente_alergias')} className="w-full px-3 py-2 border border-border rounded" placeholder="Separe múltiplas alergias por vírgula" />
           </div>
         </div>
       </fieldset>

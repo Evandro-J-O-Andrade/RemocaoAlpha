@@ -38,10 +38,11 @@ export class RemocaoRepository {
   static async getSummary(tenantId: string) {
     if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
 
+    // A view aplica o escopo do tenant no próprio SQL via get_active_tenant_id().
+    // remocao_summary não expõe tenant_id; filtrá-la por essa coluna causa HTTP 400.
     const { data, error } = await supabase
       .from('remocao_summary')
       .select('*')
-      .eq('tenant_id', tenantId)
       .maybeSingle()
 
     return { data: data as RemocaoSummary | null, error }
