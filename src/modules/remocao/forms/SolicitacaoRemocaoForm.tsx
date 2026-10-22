@@ -49,7 +49,7 @@ const solicitacaoSchema = z.object({
 export type SolicitacaoFormValues = z.infer<typeof solicitacaoSchema>
 
 function toJsonList(value?: string) {
-  return JSON.stringify((value ?? '').split(/[,;\\n]/).map((item) => item.trim()).filter(Boolean))
+  return JSON.stringify((value ?? '').split(/[,;\n]/).map((item) => item.trim()).filter(Boolean))
 }
 
 function toTimestamp(date?: string, time?: string, label = 'horário') {
