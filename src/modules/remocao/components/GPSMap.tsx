@@ -1,29 +1,35 @@
 import { useEffect, useState } from 'react'
-import { MapPin, Map } from 'lucide-react'
+import { ExternalLink, MapPin, Radio, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import type { RemocaoGpsPosicao } from '@/modules/remocao/types'
 
 export function GPSMap({ remocaoId, height = 'h-64' }: { remocaoId: string; height?: string }) {
   const [posicoes, setPosicoes] = useState<RemocaoGpsPosicao[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const fetchGps = async () => {
       setLoading(true)
-      const { data, error } = await supabase
+      const { data, error: queryError } = await supabase
         .from('remocao_gps_posicao')
         .select('*')
         .eq('remocao_id', remocaoId)
         .order('recorded_at', { ascending: false })
         .limit(50)
 
-      if (!error) setPosicoes(data || [])
+      if (cancelled) return
+      if (queryError) {
+        setError('Não foi possível consultar as posições GPS desta remoção.')
+      } else {
+        setError(null)
+        setPosicoes((data || []) as RemocaoGpsPosicao[])
+      }
       setLoading(false)
     }
 
-    fetchGps()
-
-    // Subscribe to new GPS positions
+    void fetchGps()
     const channel = supabase
       .channel(`gps-${remocaoId}`)
       .on('postgres_changes', {
@@ -31,70 +37,61 @@ export function GPSMap({ remocaoId, height = 'h-64' }: { remocaoId: string; heig
         schema: 'public',
         table: 'remocao_gps_posicao',
         filter: `remocao_id=eq.${remocaoId}`,
-      }, (payload: any) => {
+      }, (payload) => {
         const newPos = payload.new as RemocaoGpsPosicao
-        setPosicoes((prev) => [newPos, ...prev.slice(0, 49)])
+        setPosicoes((previous) => [newPos, ...previous.filter((position) => position.id !== newPos.id)].slice(0, 50))
       })
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      void supabase.removeChannel(channel)
     }
   }, [remocaoId])
 
-  const ultimaPosicao = posicoes[0]
+  const latest = posicoes[0]
+  const mapUrl = latest
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${latest.longitude - 0.012}%2C${latest.latitude - 0.008}%2C${latest.longitude + 0.012}%2C${latest.latitude + 0.008}&layer=mapnik&marker=${latest.latitude}%2C${latest.longitude}`
+    : null
+  const externalUrl = latest
+    ? `https://www.openstreetmap.org/?mlat=${latest.latitude}&mlon=${latest.longitude}#map=16/${latest.latitude}/${latest.longitude}`
+    : null
 
   if (loading) {
+    return <div className={`flex w-full ${height} items-center justify-center gap-2 rounded-lg border border-border bg-muted/30 text-sm text-muted-foreground`} role="status"><RefreshCw size={15} className="animate-spin" />Consultando posição GPS…</div>
+  }
+
+  if (error) {
+    return <div className={`flex w-full ${height} flex-col items-center justify-center gap-2 rounded-lg border border-destructive/25 bg-destructive/[0.035] p-5 text-center`} role="alert"><MapPin size={23} className="text-destructive" /><p className="text-sm font-semibold text-foreground">GPS indisponível</p><p className="max-w-sm text-xs leading-5 text-muted-foreground">{error}</p></div>
+  }
+
+  if (!latest || !mapUrl) {
     return (
-      <div className={`w-full ${height} flex items-center justify-center bg-gray-100 rounded-lg`}>
-        <span className="text-gray-500">Carregando mapa...</span>
+      <div className={`flex w-full ${height} flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/25 px-5 text-center`}>
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground"><Radio size={21} /></span>
+        <p className="mt-3 text-sm font-semibold text-foreground">Nenhuma posição recebida</p>
+        <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">O mapa será exibido quando o motorista ou dispositivo autorizado enviar coordenadas para esta remoção.</p>
       </div>
     )
   }
 
   return (
-    <div className={`w-full ${height} border rounded-lg bg-gray-50 relative overflow-hidden`}>
-      {/* Map placeholder - in production, integrate with Mapbox/Leaflet/Google Maps */}
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center">
-          <Map size={48} className="text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500">Mapa interativo (integração com provedor de mapas)</p>
+    <div className="overflow-hidden rounded-lg border border-border bg-background">
+      <iframe
+        title={`Mapa da última posição GPS da remoção ${remocaoId}`}
+        src={mapUrl}
+        className={`block w-full ${height} border-0`}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+      />
+      <div className="flex flex-col gap-2 border-t border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground"><MapPin size={13} className="shrink-0 text-primary" />{latest.latitude.toFixed(5)}, {latest.longitude.toFixed(5)}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Última posição: {new Date(latest.recorded_at).toLocaleString('pt-BR')}{latest.accuracy != null ? ` · Precisão ±${Math.round(latest.accuracy)} m` : ''}</p>
+          {latest.speed != null && <p className="mt-1 text-[11px] text-muted-foreground">Velocidade registrada: {Math.round(latest.speed * 3.6)} km/h</p>}
         </div>
+        {externalUrl && <a href={externalUrl} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-primary hover:underline"><ExternalLink size={13} /> Abrir mapa</a>}
       </div>
-
-      {/* Position overlay */}
-      {ultimaPosicao && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <MapPin size={20} className="text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between">
-                <div>
-                  <span className="text-xs text-gray-500">Posição atual</span>
-                  <div className="text-sm font-medium">
-                    {ultimaPosicao.latitude.toFixed(6)}, {ultimaPosicao.longitude.toFixed(6)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-gray-500">Última atualização</span>
-                  <div className="text-sm font-medium">
-                    {new Date(ultimaPosicao.recorded_at).toLocaleTimeString('pt-BR')}
-                  </div>
-                </div>
-              </div>
-              {ultimaPosicao.speed !== null && (
-                <div className="mt-2 flex gap-4 text-xs text-gray-600">
-                  <span>Velocidade: {Math.round((ultimaPosicao.speed || 0) * 3.6)} km/h</span>
-                  {ultimaPosicao.heading !== null && <span>Direção: {Math.round(ultimaPosicao.heading || 0)}°</span>}
-                  {ultimaPosicao.accuracy && <span>Precisão: ±{ultimaPosicao.accuracy}m</span>}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
