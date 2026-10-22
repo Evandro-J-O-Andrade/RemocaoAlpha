@@ -10,6 +10,7 @@ import { hasEffectivePermission } from '@/modules/remocao/permissions/rbac'
 import { Perm } from '@/modules/remocao/permissions'
 import { useRemocao } from '@/modules/remocao/context/RemocaoContext'
 import { FilaOperacional } from '@/modules/remocao/components/FilaOperacional'
+import { KanbanBoard } from '@/modules/remocao/components/KanbanBoard'
 import { GPSMap } from '@/modules/remocao/components/GPSMap'
 import type { RemocaoDashboardView, StatusRemocao } from '@/modules/remocao/types'
 import { supabase } from '@/lib/supabase/client'
@@ -81,6 +82,7 @@ export function CentralRemocoesPage() {
     remocoes, filteredRemocoes, loading, error, refetch, filter, setFilter, setSelectedRemocao,
   } = useRemocao()
   const [pipeline, setPipeline] = useState<PipelineFilter>('todas')
+  const [viewMode, setViewMode] = useState<'lista' | 'kanban'>('lista')
   const [priority, setPriority] = useState<'all' | 'emergencial' | 'urgente' | 'rotina'>('all')
   const [search, setSearch] = useState(filter.search)
   const [fleet, setFleet] = useState<FleetCounts>({ available: 0, active: 0, total: 0 })
@@ -236,13 +238,23 @@ export function CentralRemocoesPage() {
                 <h2 className="text-sm font-bold text-foreground">Fila de despacho</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">{visibleRemocoes.length} registros correspondem aos filtros</p>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Activity size={14} /> Atualização por consulta e eventos disponíveis</span>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded-lg border border-border bg-background p-0.5" role="group" aria-label="Modo de visualização">
+                  <button type="button" onClick={() => setViewMode('lista')} aria-pressed={viewMode === 'lista'} className={clsx('rounded-md px-2.5 py-1 text-xs font-semibold', viewMode === 'lista' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>Lista</button>
+                  <button type="button" onClick={() => setViewMode('kanban')} aria-pressed={viewMode === 'kanban'} className={clsx('rounded-md px-2.5 py-1 text-xs font-semibold', viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>Kanban</button>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Activity size={14} /> Atualização por consulta e eventos disponíveis</span>
+              </div>
             </div>
 
             {loading ? (
               <div className="flex min-h-48 items-center justify-center gap-3 p-8 text-sm text-muted-foreground" role="status"><span className="remocao-spinner" />Carregando a fila operacional…</div>
             ) : visibleRemocoes.length ? (
-              <FilaOperacional remocoes={visibleRemocoes} onRemocaoClick={(row) => setSelectedRemocao(row)} />
+              viewMode === 'kanban' ? (
+                <div className="p-3"><KanbanBoard remocoes={visibleRemocoes} onCardClick={(row) => setSelectedRemocao(row)} /></div>
+              ) : (
+                <FilaOperacional remocoes={visibleRemocoes} onRemocaoClick={(row) => setSelectedRemocao(row)} />
+              )
             ) : (
               <div className="flex min-h-64 flex-col items-center justify-center px-6 py-10 text-center">
                 <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted/60 text-muted-foreground"><CheckCircle2 size={23} /></span>
