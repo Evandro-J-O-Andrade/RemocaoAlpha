@@ -32,10 +32,21 @@ export function RequirePermission({
   permissions: PermissionKey | PermissionKey[]
   children: ReactNode
 }) {
-  const { user, loading, status } = useAuth()
+  const { user, loading, status, refreshUser } = useAuth()
 
   if (loading || !user) {
     return <LoadingAppPage />
+  }
+
+  if (status === 'error') {
+    return (
+      <FeedbackPage
+        variant="error"
+        title="Falha ao validar acesso"
+        description="Não foi possível confirmar suas permissões no servidor. Nenhuma permissão foi concedida automaticamente."
+        onRetry={() => { void refreshUser() }}
+      />
+    )
   }
 
   if (status === 'no_tenant') {
