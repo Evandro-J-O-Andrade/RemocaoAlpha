@@ -253,6 +253,44 @@ export class RemocaoRepository {
   static async uploadDocumento(remocaoId: string, tenantId: string, file: File, tipo: string, titulo: string) {
     if (!tenantId) return { data: null, error: new Error('Tenant ID required'), fileUrl: null }
 
+    // --- Validacao de formato e tamanho antes do upload ---
+    const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
+    const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp']
+    const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+
+    if (file.size > MAX_SIZE) {
+      return { data: null, error: new Error(`Arquivo excede o tamanho maximo de ${MAX_SIZE / 1024 / 1024} MB`), fileUrl: null }
+    }
+    if (file.size === 0) {
+      return { data: null, error: new Error('Arquivo vazio'), fileUrl: null }
+    }
+
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return { data: null, error: new Error(`Extensao ${ext} nao permitida. Permitidas: ${ALLOWED_EXTENSIONS.join(', ')}`), fileUrl: null }
+    }
+    if (!ALLOWED_MIME.includes(file.type)) {
+      return { data: null, error: new Error(`Tipo MIME ${file.type} nao permitido`), fileUrl: null }
+    }
+
+    // Verificacao de tipo real (magic bytes) para PDF e imagens
+    const header = await file.slice(0, 12).arrayBuffer()
+    const bytes = new Uint8Array(header)
+    const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46
+    const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF
+    const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47
+    const isWebp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+
+    const declaredPdf = file.type === 'application/pdf' || ext === '.pdf'
+    const declaredImage = file.type.startsWith('image/') || ['.jpg', '.jpeg', '.png', '.webp'].includes(ext)
+
+    if (declaredPdf && !isPdf) {
+      return { data: null, error: new Error('O arquivo declarado como PDF nao possui a assinatura PDF valida'), fileUrl: null }
+    }
+    if (declaredImage && !(isJpeg || isPng || isWebp)) {
+      return { data: null, error: new Error('O arquivo declarado como imagem nao possui assinatura de imagem valida'), fileUrl: null }
+    }
+
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) {
       return { data: null, error: authError || new Error('Usuário autenticado não encontrado'), fileUrl: null }
@@ -321,6 +359,22 @@ export class RemocaoRepository {
       data: data as Tables['remocao_documento']['Row'] | null,
       error: null,
       fileUrl: signErr ? null : (signedUrl?.signedUrl || null),
+    }
+  }
+
+  static async verifyDocumentoIntegrity(storagePath: string, expectedHash: string): Promise<{ intact: boolean; error: Error | null }> {
+    try {
+      const { data, error } = await supabase.storage.from('remocao-documentos').download(storagePath)
+      if (error || !data) return { intact: false, error: error || new Error('Nao foi possivel recuperar o arquivo') }
+      const bytes = await data.arrayBuffer()
+      const digest = await crypto.subtle.digest('SHA-256', bytes)
+      const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+      if (hash !== expectedHash) {
+        return { intact: false, error: new Error(`Hash divergente: esperado ${expectedHash}, obtido ${hash}`) }
+      }
+      return { intact: true, error: null }
+    } catch (e) {
+      return { intact: false, error: e instanceof Error ? e : new Error('Erro ao verificar integridade') }
     }
   }
 
