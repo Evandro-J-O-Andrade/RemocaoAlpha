@@ -109,7 +109,7 @@ export function AppRoutes() {
           <Route
             path="/admin"
             element={
-              <RequirePermission permissions={[Perm.ADMIN_USERS_MANAGE, Perm.ADMIN_ROLES_MANAGE]}>
+              <RequirePermission permissions={[Perm.ADMIN_USERS_MANAGE, Perm.ADMIN_ROLES_MANAGE, Perm.ADMIN_TENANT_MANAGE]}>
                 <AdminManagementPage />
               </RequirePermission>
             }
