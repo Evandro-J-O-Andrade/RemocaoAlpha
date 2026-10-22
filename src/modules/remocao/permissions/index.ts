@@ -23,7 +23,7 @@ export const Perm = {
   INTERCORRENCIA_REGISTRAR: "remocao.intercorrencia.registrar",
   INTERCORRENCIA_VISUALIZAR: "remocao.intercorrencia.visualizar",
   AUDITORIA_CONSULTAR: "remocao.auditoria.consultar",
-  DASHBOARD_VISUALIZAR: "remocao.dashboard.visualizar",
+  DASHBOARD_VISUALIZAR: "remocao.dashboard.read",
   DASHBOARD_OPERACIONAL: "remocao.dashboard.operacional",
   RELATORIO_VISUALIZAR: "remocao.relatorio.visualizar",
   RELATORIO_EXPORTAR: "remocao.relatorio.exportar",
