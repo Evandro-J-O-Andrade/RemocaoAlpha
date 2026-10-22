@@ -1,3 +1,5 @@
+> **Status do documento:** requisitos e critérios de aceitação. A presença deste arquivo não comprova que as funcionalidades foram implementadas ou testadas. Consulte os commits, testes e relatório de validação para confirmar cada item.
+
 # REMOÇÃO ALPHA — IMPLEMENTAÇÃO COMPLETA DE GESTÃO DE ACESSOS, SEED, RELATÓRIOS E ANALÍTICA
 
 ## ORDEM DE EXECUÇÃO
