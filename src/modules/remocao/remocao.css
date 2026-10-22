@@ -83,7 +83,6 @@ html.dark {
   --rem-shadow-sm: 0 1px 3px rgb(0 0 0 / 30%);
   --rem-shadow-md: 0 8px 24px rgb(0 0 0 / 40%);
   --rem-shadow-focus: 0 0 0 3px rgb(56 189 248 / 25%);
-  color-scheme: dark;
 }
 
 .remocao-module,

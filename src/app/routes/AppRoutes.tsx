@@ -116,13 +116,14 @@ export function AppRoutes() {
           />
 
           <Route
-            path="/relatorios"
+            path="/relatorios/*"
             element={
               <RequirePermission permissions={Perm.RELATORIO_VISUALIZAR}>
                 <ReportsPage />
               </RequirePermission>
             }
           />
+
 
           <Route
             path="/dashboard-analitico"
