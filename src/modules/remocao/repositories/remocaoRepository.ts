@@ -542,3 +542,84 @@ export class RemocaoRepository {
     return { data, error }
   }
 }
+
+export class PacienteRepository {
+  static async list(tenantId: string, opts?: { search?: string; limit?: number; offset?: number }) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    let query = supabase
+      .from('paciente')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('nome', { ascending: true })
+
+    if (opts?.search) {
+      query = query.ilike('nome', `%${opts.search}%`)
+    }
+    if (opts?.limit) query = query.limit(opts.limit)
+    if (opts?.offset) query = query.range(opts.offset, opts.offset + (opts.limit || 50) - 1)
+
+    const { data, error } = await query
+    return { data: data as Tables['paciente']['Row'][] | null, error }
+  }
+
+  static async getById(id: string, tenantId: string) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('paciente')
+      .select('*')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .single()
+    return { data: data as Tables['paciente']['Row'] | null, error }
+  }
+
+  static async getByCpf(tenantId: string, cpf: string) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('paciente')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('cpf', cpf)
+      .maybeSingle()
+    return { data: data as Tables['paciente']['Row'] | null, error }
+  }
+
+  static async create(tenantId: string, paciente: Omit<Tables['paciente']['Insert'], 'tenant_id'>) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('paciente')
+      .insert({ ...paciente, tenant_id: tenantId })
+      .select()
+      .single()
+    return { data: data as Tables['paciente']['Row'] | null, error }
+  }
+
+  static async update(id: string, tenantId: string, updates: Partial<Tables['paciente']['Update']>) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('paciente')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .select()
+      .single()
+    return { data: data as Tables['paciente']['Row'] | null, error }
+  }
+
+  static async getRemocoesPorPaciente(pacienteId: string, tenantId: string) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('remocao')
+      .select('*')
+      .eq('paciente_cadastro_id', pacienteId)
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+    return { data: data as Tables['remocao']['Row'][] | null, error }
+  }
+}

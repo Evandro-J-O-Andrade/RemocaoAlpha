@@ -2380,3 +2380,15 @@ html.dark {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+html.dark .remocao-input,
+html.dark .remocao-select,
+html.dark .remocao-textarea {
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border-color: var(--rem-border-strong);
+}
+html.dark .remocao-input::placeholder,
+html.dark .remocao-textarea::placeholder {
+  color: var(--rem-text-muted);
+}

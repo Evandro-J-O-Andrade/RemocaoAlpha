@@ -1,0 +1,118 @@
+﻿{
+  "name": "RemocaoAlpha - GPS Realtime Tracking (auditoria)",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "INSERT"
+        ],
+        "table": "remocao_gps_posicao",
+        "schema": "public"
+      },
+      "id": "supabase-trigger",
+      "name": "Supabase GPS Trigger",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Escuta cada insert de remocao_gps_posicao. Não altera status da remoção automaticamente. Apenas registra/audita a posição recebida."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": "remocao",
+        "schema": "public",
+        "columns": [
+          "id",
+          "tenant_id",
+          "status",
+          "numero"
+        ],
+        "filterOptions": {
+          "filters": [
+            {
+              "column": "id",
+              "value": "={{ $json.remocao_id }}",
+              "operator": "equals"
+            }
+          ]
+        }
+      },
+      "id": "validar-remocao",
+      "name": "Validar Remoção",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "notes": "Confirma que a remoção existe e pertence ao tenant antes de qualquer uso da posição GPS."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "remocao_gps_posicao",
+        "schema": "public",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": {
+            "auditado_em": "={{ $now }}"
+          }
+        },
+        "filterOptions": {
+          "filters": [
+            {
+              "column": "id",
+              "value": "={{ $json.id }}",
+              "operator": "equals"
+            }
+          ]
+        }
+      },
+      "id": "marcar-auditado",
+      "name": "Marcar como Auditado",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "notes": "Marca a posição como auditada. Não altera o status operacional da remoção (não é confirmação automática de chegada)."
+    }
+  ],
+  "connections": {
+    "Supabase GPS Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validar Remoção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Remoção": {
+      "main": [
+        [
+          {
+            "node": "Marcar como Auditado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "id": "gps-realtime-tracking-auditoria",
+  "active": false,
+  "tags": [
+    "remocao-alpha",
+    "gps",
+    "auditoria",
+    "pendente-revisao"
+  ]
+}

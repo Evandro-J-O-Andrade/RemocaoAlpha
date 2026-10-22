@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Activity, AlertTriangle, Ambulance, ArrowDownRight, ArrowRight, CheckCircle2,
-  Clock3, MapPin, Plus, RefreshCw, Search, ShieldAlert, Truck, XCircle,
+  Clock3, MapPin, Plus, RefreshCw, Search, ShieldAlert, Truck,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/app/providers/AuthProvider'
@@ -249,7 +249,6 @@ export function CentralRemocoesPage() {
                 <h3 className="text-base font-semibold text-foreground">{pipeline === 'todas' && !search && priority === 'all' ? 'Nenhuma remoção registrada neste contexto' : 'Nenhuma remoção corresponde aos filtros'}</h3>
                 <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">{pipeline === 'todas' && !search && priority === 'all' ? 'A consulta foi concluída sem retornar registros para a organização e as permissões atuais. Isso não representa falha de carregamento.' : 'Ajuste a etapa, a prioridade ou a busca para localizar outras solicitações.'}</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {canCreateRemocao && <Link to="/nova-remocao" className="remocao-btn remocao-btn--primary"><Plus size={16} /> Nova remoção</Link>}
                   {(search || priority !== 'all' || pipeline !== 'todas') && <button type="button" onClick={resetFilters} className="remocao-btn remocao-btn--secondary">Limpar filtros</button>}
                 </div>
               </div>

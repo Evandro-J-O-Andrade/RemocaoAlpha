@@ -74,6 +74,7 @@ export interface Database {
           numero?: string
           titulo?: string | null
           paciente_id?: number | null
+          paciente_cadastro_id?: string | null
           paciente_nome: string
           paciente_prontuario?: string | null
           paciente_data_nascimento?: string | null
@@ -1022,6 +1023,156 @@ export interface Database {
         }
         Update: {
           [K in keyof Database['public']['Tables']['role_assignments']['Insert']]?: K extends never ? never : Database['public']['Tables']['role_assignments']['Insert'][K]
+        }
+      }
+
+      paciente: {
+        Row: {
+          id: string
+          tenant_id: string
+          nome: string
+          data_nascimento?: string | null
+          sexo?: string | null
+          cpf?: string | null
+          telefone?: string | null
+          email?: string | null
+          prontuario?: string | null
+          gpat?: string | null
+          cns?: string | null
+          cmdpro?: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          nome: string
+          data_nascimento?: string | null
+          sexo?: string | null
+          cpf?: string | null
+          telefone?: string | null
+          email?: string | null
+          prontuario?: string | null
+          gpat?: string | null
+          cns?: string | null
+          cmdpro?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          [K in keyof Database['public']['Tables']['paciente']['Insert']]?: K extends never ? never : Database['public']['Tables']['paciente']['Insert'][K]
+        }
+      }
+
+      cid10: {
+        Row: {
+          codigo: string
+          categoria?: string | null
+          subcategoria?: string | null
+          descricao: string
+          descricao_resumida?: string | null
+          capitulo?: string | null
+          capitulo_codigo?: string | null
+          grupo?: string | null
+          fonte: string
+          versao_fonte?: string | null
+          importado_em: string
+        }
+        Insert: {
+          codigo: string
+          categoria?: string | null
+          subcategoria?: string | null
+          descricao: string
+          descricao_resumida?: string | null
+          capitulo?: string | null
+          capitulo_codigo?: string | null
+          grupo?: string | null
+          fonte?: string
+          versao_fonte?: string | null
+          importado_em?: string
+        }
+        Update: {
+          [K in keyof Database['public']['Tables']['cid10']['Insert']]?: K extends never ? never : Database['public']['Tables']['cid10']['Insert'][K]
+        }
+      }
+
+      cbo_ocupacoes: {
+        Row: {
+          codigo: string
+          titulo: string
+          titulo_resumido?: string | null
+          familia_codigo?: string | null
+          familia_titulo?: string | null
+          grande_grupo_codigo?: string | null
+          grande_grupo_titulo?: string | null
+          descricao?: string | null
+          fonte: string
+          versao_fonte?: string | null
+          importado_em: string
+        }
+        Insert: {
+          codigo: string
+          titulo: string
+          titulo_resumido?: string | null
+          familia_codigo?: string | null
+          familia_titulo?: string | null
+          grande_grupo_codigo?: string | null
+          grande_grupo_titulo?: string | null
+          descricao?: string | null
+          fonte?: string
+          versao_fonte?: string | null
+          importado_em?: string
+        }
+        Update: {
+          [K in keyof Database['public']['Tables']['cbo_ocupacoes']['Insert']]?: K extends never ? never : Database['public']['Tables']['cbo_ocupacoes']['Insert'][K]
+        }
+      }
+
+      sigtap_procedimentos: {
+        Row: {
+          codigo: string
+          competencia: string
+          nome: string
+          nome_resumido?: string | null
+          grupo_codigo?: string | null
+          grupo_nome?: string | null
+          subgrupo_codigo?: string | null
+          subgrupo_nome?: string | null
+          forma_organizacao_codigo?: string | null
+          forma_organizacao_nome?: string | null
+          valor_sh: number
+          valor_sa: number
+          valor_sp: number
+          valor_total: number
+          idade_minima?: number | null
+          idade_maxima?: number | null
+          sexo_permitido?: 'M' | 'F' | 'AMBOS' | null
+          fonte: string
+          importado_em: string
+        }
+        Insert: {
+          codigo: string
+          competencia: string
+          nome: string
+          nome_resumido?: string | null
+          grupo_codigo?: string | null
+          grupo_nome?: string | null
+          subgrupo_codigo?: string | null
+          subgrupo_nome?: string | null
+          forma_organizacao_codigo?: string | null
+          forma_organizacao_nome?: string | null
+          valor_sh?: number
+          valor_sa?: number
+          valor_sp?: number
+          valor_total?: number
+          idade_minima?: number | null
+          idade_maxima?: number | null
+          sexo_permitido?: 'M' | 'F' | 'AMBOS' | null
+          fonte?: string
+          importado_em?: string
+        }
+        Update: {
+          [K in keyof Database['public']['Tables']['sigtap_procedimentos']['Insert']]?: K extends never ? never : Database['public']['Tables']['sigtap_procedimentos']['Insert'][K]
         }
       }
     }

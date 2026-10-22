@@ -42,8 +42,8 @@ select
   rv.placa as veiculo_placa,
   rv.modelo as veiculo_modelo,
   rm.id as motorista_id,
-  rm.nome as motorista_nome,
-  rm.status as motorista_status,
+  rm.profissional_nome as motorista_nome,
+  case when rm.confirmado then 'confirmado' else 'pendente' end as motorista_status,
   r.created_at,
   r.updated_at,
   r.motivo_cancelamento,
@@ -64,7 +64,14 @@ left join remocao_setor os on r.origem_setor_id = os.id
 left join remocao_unidade du on r.destino_unidade_id = du.id
 left join remocao_setor ds on r.destino_setor_id = ds.id
 left join remocao_veiculo rv on r.veiculo_id = rv.id
-left join remocao_motorista rm on r.updated_by = rm.id
+left join lateral (
+  select mem.id, mem.profissional_nome, mem.confirmado
+  from remocao_equipe re
+  join remocao_equipe_membro mem on mem.equipe_id = re.id and mem.role = 'motorista'
+  where re.remocao_id = r.id
+  order by mem.confirmado desc, mem.created_at desc
+  limit 1
+) rm on true
 where r.tenant_id = get_active_tenant_id();
 
 -- =============================================================================
