@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X, Paperclip } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
+import { DestinoExternoPicker } from '@/modules/remocao/components/DestinoExternoPicker'
 
 const solicitacaoSchema = z.object({
   paciente_nome: z.string().min(3, 'Nome do paciente é obrigatório'),
@@ -60,6 +61,7 @@ export function SolicitacaoRemocaoForm({
   const [documentoTipo, setDocumentoTipo] = useState<'relatorio_medico' | 'documento_transferencia' | 'autorizacao_transferencia' | 'pedido_exame' | 'resultado_exame' | 'prescricao' | 'documento_administrativo' | 'outro'>('outro')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitNotice, setSubmitNotice] = useState<string | null>(null)
+  const [destinoExternoId, setDestinoExternoId] = useState<string | null>(null)
   const [createdRemocaoId, setCreatedRemocaoId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -140,6 +142,7 @@ export function SolicitacaoRemocaoForm({
         destino_endereco: data.destino_endereco,
         destino_contato_nome: data.destino_contato_nome,
         destino_contato_telefone: data.destino_contato_telefone,
+        destino_externo_id: destinoExternoId,
         finalidade: data.finalidade,
         prioridade: data.prioridade,
         tipo_transporte: data.tipo_transporte,
@@ -149,7 +152,7 @@ export function SolicitacaoRemocaoForm({
         data_prevista: data.data_prevista,
         horario_previsto_saida: data.horario_previsto_saida,
         horario_previsto_atendimento: data.horario_previsto_atendimento,
-      })
+      } as any)
 
       if (result.error || !result.data) {
         const message = result.error?.message || 'Não foi possível criar a solicitação. Confira os dados e tente novamente.'
@@ -328,10 +331,13 @@ export function SolicitacaoRemocaoForm({
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Endereço (se externo)</label>
-            <input type="text" {...register('destino_endereco')} className="w-full px-3 py-2 border border-border rounded" />
-          </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Endereço (se externo)</label>
+              <input type="text" {...register('destino_endereco')} className="w-full px-3 py-2 border border-border rounded" />
+            </div>
+            <div className="md:col-span-2">
+              <DestinoExternoPicker tenantId={tenantId} value={destinoExternoId} onChange={(id) => setDestinoExternoId(id)} />
+            </div>
         </div>
       </fieldset>
 
