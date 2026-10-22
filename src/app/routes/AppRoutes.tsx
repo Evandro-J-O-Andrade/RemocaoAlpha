@@ -5,6 +5,7 @@ import { NovaRemocaoPage } from '@/modules/remocao/pages/NovaRemocaoPage'
 import { RemocaoDetailPage } from '@/modules/remocao/pages/RemocaoDetailPage'
 import { DriverInterface } from '@/modules/remocao/pages/DriverInterface'
 import { AdminManagementPage } from '@/modules/remocao/pages/AdminManagementPage'
+import { GlobalAdministrationPage } from '@/modules/remocao/pages/GlobalAdministrationPage'
 import { ReportsPage } from '@/modules/remocao/pages/ReportsPage'
 import { ReportDetailPage } from '@/modules/remocao/pages/ReportDetailPage'
 import { DashboardAnaliticoPage } from '@/modules/remocao/pages/DashboardAnaliticoPage'
@@ -112,6 +113,15 @@ export function AppRoutes() {
             element={
               <RequirePermission permissions={[Perm.ADMIN_USERS_MANAGE, Perm.ADMIN_ROLES_MANAGE]}>
                 <AdminManagementPage />
+              </RequirePermission>
+            }
+          />
+
+          <Route
+            path="/admin/global"
+            element={
+              <RequirePermission permissions={Perm.ADMIN_TENANT_MANAGE}>
+                <GlobalAdministrationPage />
               </RequirePermission>
             }
           />
