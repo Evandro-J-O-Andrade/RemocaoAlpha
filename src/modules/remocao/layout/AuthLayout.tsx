@@ -13,7 +13,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
 
-  const hasPerm = (p: string) => user?.permissions.includes(p as any) || user?.is_root
+  const hasPerm = (p: string) => Boolean(user?.permissions.includes(p as any) || user?.is_root)
+  const hasAnyPerm = (permissions: string[]) => Boolean(user?.is_root || permissions.some((permission) => user?.permissions.includes(permission as any)))
 
   return (
     <div className="auth-layout">
@@ -46,22 +47,26 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="auth-sidebar__nav">
-          <Link
-            to="/"
-            className="auth-sidebar__nav-item"
-            onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
-          >
-            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
-            {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
-          </Link>
-          <Link
-            to="/nova-remocao"
-            className="auth-sidebar__nav-item"
-            onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
-          >
-            <span className="auth-sidebar__nav-icon"><User size={18} /></span>
-            {sidebarOpen && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
-          </Link>
+          {hasAnyPerm([Perm.REMOCACAO_VISUALIZAR, Perm.DASHBOARD_VISUALIZAR]) && (
+            <Link
+              to="/"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
+            </Link>
+          )}
+          {hasPerm(Perm.REMOCACAO_SOLICITAR) && (
+            <Link
+              to="/nova-remocao"
+              className="auth-sidebar__nav-item"
+              onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
+            >
+              <span className="auth-sidebar__nav-icon"><User size={18} /></span>
+              {sidebarOpen && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
+            </Link>
+          )}
           {hasPerm(Perm.RELATORIO_VISUALIZAR) && (
             <Link
               to="/relatorios"
@@ -82,7 +87,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               {sidebarOpen && <span className="auth-sidebar__nav-label">Dashboard Analitico</span>}
             </Link>
           )}
-          {hasPerm(Perm.ADMIN_USERS_MANAGE) && (
+          {hasAnyPerm([Perm.ADMIN_USERS_MANAGE, Perm.ADMIN_ROLES_MANAGE, Perm.ADMIN_TENANT_MANAGE]) && (
             <Link
               to="/admin"
               className="auth-sidebar__nav-item"
