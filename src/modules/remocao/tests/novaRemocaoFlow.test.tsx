@@ -33,6 +33,8 @@ vi.mock('@/modules/remocao/repositories/remocaoRepository', () => ({
     create: vi.fn(),
     getUnidades: vi.fn(),
     getSetores: vi.fn(),
+    listVeiculosPorSituacao: vi.fn(),
+    listEquipes: vi.fn(),
   },
 }))
 
@@ -78,6 +80,8 @@ vi.mock('@hookform/resolvers/zod', () => ({
 
 const mockCreate = RemocaoRepository.create as ReturnType<typeof vi.fn>
 const mockGetUnidades = RemocaoRepository.getUnidades as ReturnType<typeof vi.fn>
+const mockListVeiculosPorSituacao = RemocaoRepository.listVeiculosPorSituacao as ReturnType<typeof vi.fn>
+const mockListEquipes = RemocaoRepository.listEquipes as ReturnType<typeof vi.fn>
 const mockRpc = supabase.rpc as ReturnType<typeof vi.fn>
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 const mockGetSession = supabase.auth.getSession as ReturnType<typeof vi.fn>
@@ -121,6 +125,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockCreate.mockReset()
   mockGetUnidades.mockReset()
+  mockListVeiculosPorSituacao.mockReset()
+  mockListEquipes.mockReset()
   mockRpc.mockReset()
   mockFrom.mockReset()
   mockGetSession.mockReset()
@@ -133,6 +139,8 @@ beforeEach(() => {
     data: { id: 'rem-123', numero: 'REM-001' },
     error: null,
   })
+  mockListVeiculosPorSituacao.mockResolvedValue({ data: [], error: null })
+  mockListEquipes.mockResolvedValue({ data: [], error: null })
   mockRpc.mockResolvedValue({ data: null, error: null })
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockFrom.mockImplementation(() => fromMock(null))
@@ -293,7 +301,7 @@ describe('Central de Remoções — ação de nova remoção', () => {
 
     renderCentral()
 
-    await screen.findByRole('heading', { name: /central de remoções/i })
+    await screen.findByRole('heading', { name: /central de despacho/i })
     expect(screen.queryByRole('link', { name: /nova remoção/i })).toBeNull()
   })
 

@@ -190,7 +190,19 @@ export class RemocaoRepository {
     return { data: { equipe, membros: membrosData }, error: e2 }
   }
 
-  // --- Vehicle ---
+  // --- Vehicle fleet ---
+  static async listVeiculosPorSituacao(tenantId: string) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('remocao_veiculo')
+      .select('id, placa, modelo, tipo, situacao, quilometragem')
+      .eq('tenant_id', tenantId)
+      .order('placa')
+
+    return { data: data as Tables['remocao_veiculo']['Row'][] | null, error }
+  }
+
   static async listVeiculosDisponiveis(tenantId: string) {
     if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
 
@@ -221,6 +233,18 @@ export class RemocaoRepository {
       .eq('tenant_id', tenantId)
       .eq('status', 'disponivel')
     return { data: data as Tables['remocao_motorista']['Row'][] | null, error }
+  }
+
+  static async listEquipes(tenantId: string) {
+    if (!tenantId) return { data: null, error: new Error('Tenant ID required') }
+
+    const { data, error } = await supabase
+      .from('remocao_equipe')
+      .select('*, remocao_equipe_membro(*)')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+
+    return { data: data as any[] | null, error }
   }
 
   static async atualizarStatusMotorista(motoristaId: string, tenantId: string, status: string) {
