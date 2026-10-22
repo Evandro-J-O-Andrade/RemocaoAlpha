@@ -367,7 +367,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (updateError) throw updateError
 
     if (user?.id) {
-      await supabase.rpc('clear_password_reset_flag', { p_person_id: user.id })
+      const { error: resetFlagError } = await supabase.rpc('clear_password_reset_flag', {
+        p_person_id: user.id,
+      })
+      if (resetFlagError) {
+        // A senha já foi atualizada no Auth, mas a exigência de troca continua ativa.
+        // Não liberar navegação nem alterar o estado local se a RPC falhar.
+        throw resetFlagError
+      }
       setUser((prev) => prev ? { ...prev, password_reset_required: false } : null)
     }
   }
