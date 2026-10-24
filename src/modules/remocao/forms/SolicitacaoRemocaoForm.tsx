@@ -276,6 +276,7 @@ export function SolicitacaoRemocaoForm({
       return
     }
     reset()
+    setSelectedProcedimentos([])
     setDocumentos([])
     setSubmitError(null)
     setSubmitNotice(null)
@@ -438,28 +439,16 @@ export function SolicitacaoRemocaoForm({
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Cid10Select onChange={(r) => {
-              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
-              if (last && !last.cid) {
-                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, cid: r }])
-              } else {
-                setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: r, cbo: null }])
-              }
+              // Cada seleção é um vínculo próprio: nunca substitui CID previamente selecionado.
+              setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: r, cbo: null }])
             }} />
             <SigtapSelect onChange={(r) => {
-              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
-              if (last && !last.sigtap) {
-                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, sigtap: r }])
-              } else {
-                setSelectedProcedimentos(prev => [...prev, { sigtap: r, cid: null, cbo: null }])
-              }
+              // Cada procedimento/exame SIGTAP fica registrado individualmente.
+              setSelectedProcedimentos(prev => [...prev, { sigtap: r, cid: null, cbo: null }])
             }} />
             <CboSelect onChange={(r) => {
-              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
-              if (last && !last.cbo) {
-                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, cbo: r }])
-              } else {
-                setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: null, cbo: r }])
-              }
+              // Cada ocupação CBO selecionada é preservada como vínculo próprio.
+              setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: null, cbo: r }])
             }} />
           </div>
           {selectedProcedimentos.length > 0 && (
@@ -472,7 +461,7 @@ export function SolicitacaoRemocaoForm({
                     {p.sigtap ? ` | SIGTAP: ${p.sigtap.codigo}` : ''}
                     {p.cbo ? ` | CBO: ${p.cbo.codigo}` : ''}
                   </span>
-                  <button type="button" onClick={() => setSelectedProcedimentos(prev => prev.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">Remover</button>
+                  <button type="button" onClick={() => setSelectedProcedimentos(prev => prev.filter((_, j) => j !== i))} aria-label={`Remover vínculo ${i + 1}`} title="Remover esta seleção" className="inline-flex items-center justify-center rounded-md p-1.5 text-red-500 hover:bg-red-500/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X size={16} /></button>
                 </div>
               ))}
             </div>
