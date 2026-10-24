@@ -35,12 +35,12 @@ function useTabelaBusca(tabela: Catalogo, query: string) {
       setLoading(true)
       setError(null)
       try {
-        const q = `%${query.trim()}%`
+        const q = `%${query.trim().replace(/"/g, '')}%`
         const config = catalogoConfig(tabela)
         let request: any = supabase.from(config.tabela).select(config.colunas)
-        if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
-        else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
-        else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`).order('competencia', { ascending: false })
+        if (tabela === 'cid10') request = request.or(`codigo.ilike."${q}",descricao.ilike."${q}"`)
+        else if (tabela === 'cbo') request = request.or(`codigo.ilike."${q}",titulo.ilike."${q}"`)
+        else request = request.or(`codigo.ilike."${q}",nome.ilike."${q}"`).order('competencia', { ascending: false })
         const { data, error: queryError } = await request.limit(20)
         if (cancelled) return
         if (queryError) { setError(queryError.message); setResultados([]) }
@@ -78,10 +78,10 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
         let request: any = supabase.from(config.tabela).select(config.colunas, { count: 'exact' })
         const term = query.trim()
         if (term) {
-          const q = `%${term}%`
-          if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
-          else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
-          else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`)
+          const q = `%${term}%`.replace(/"/g, '')
+          if (tabela === 'cid10') request = request.or(`codigo.ilike."${q}",descricao.ilike."${q}"`)
+          else if (tabela === 'cbo') request = request.or(`codigo.ilike."${q}",titulo.ilike."${q}"`)
+          else request = request.or(`codigo.ilike."${q}",nome.ilike."${q}"`)
         }
         if (tabela === 'sigtap') request = request.order('competencia', { ascending: false }).order('codigo', { ascending: true })
         else request = request.order('codigo', { ascending: true })
