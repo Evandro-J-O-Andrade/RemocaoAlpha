@@ -87,7 +87,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><User size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Nova Remocao</span>}
             </Link>
           )}
           {hasPerm(Perm.RELATORIO_VISUALIZAR) && (
@@ -97,7 +97,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><FileText size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Relatorios</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Relatorios</span>}
             </Link>
           )}
           {hasPerm(Perm.DASHBOARD_VISUALIZAR) && (
@@ -107,7 +107,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><BarChart3 size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Dashboard Analitico</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Dashboard Analitico</span>}
             </Link>
           )}
           {hasAnyPerm([Perm.ADMIN_USERS_MANAGE, Perm.ADMIN_ROLES_MANAGE, Perm.ADMIN_TENANT_MANAGE]) && (
@@ -117,7 +117,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><Users size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Gestao de Acessos</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Gestao de Acessos</span>}
             </Link>
           )}
           {user?.is_root && (
@@ -127,7 +127,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><Shield size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Administracao Global</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Administracao Global</span>}
             </Link>
           )}
           <Link
@@ -136,7 +136,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
           >
             <span className="auth-sidebar__nav-icon"><User size={18} /></span>
-            {sidebarOpen && <span className="auth-sidebar__nav-label">Minha Conta</span>}
+            {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Minha Conta</span>}
           </Link>
         </nav>
 
