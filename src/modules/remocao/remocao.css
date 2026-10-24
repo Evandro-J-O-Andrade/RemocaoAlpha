@@ -2404,3 +2404,9 @@ html.dark .remocao-textarea::placeholder {
 .sidebar-mobile-overlay { backdrop-filter: blur(8px); }
 @keyframes slide-in-from-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 .animate-slide-in { animation: slide-in-from-left 0.3s ease-out; }
+
+/* Dark/light harmonization */
+.remocao-card { background: var(--rem-surface); color: var(--rem-text); border: 1px solid var(--rem-border); }
+.remocao-form-grid input, .remocao-form-grid select, .remocao-form-grid textarea { background: var(--rem-surface); color: var(--rem-text); border: 1px solid var(--rem-border); }
+.remocao-form-grid input:focus, .remocao-form-grid select:focus, .remocao-form-grid textarea:focus { border-color: var(--rem-primary); outline: none; box-shadow: var(--rem-shadow-focus); }
+

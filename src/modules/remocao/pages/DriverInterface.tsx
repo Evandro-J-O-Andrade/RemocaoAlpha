@@ -49,8 +49,9 @@ export function DriverInterface({ remocaoId }: { remocaoId: string }) {
     if (!user) return
 
     const loadMotoristasVeiculos = async () => {
+      // Restringir motoristas ao usuário autenticado (não carregar todos do tenant)
       const [{ data: mData }, { data: vData }] = await Promise.all([
-        supabase.from('remocao_motorista').select('*').eq('tenant_id', user.tenant_id),
+        supabase.from('remocao_motorista').select('*').eq('tenant_id', user.tenant_id).eq('pessoa_id', user.id),
         supabase.from('remocao_veiculo').select('*').eq('tenant_id', user.tenant_id).eq('situacao', 'disponivel'),
       ])
       setMotoristas(mData || [])
@@ -63,24 +64,28 @@ export function DriverInterface({ remocaoId }: { remocaoId: string }) {
   const handleCheckin = async (data: any) => {
     if (!user) return
     const result = await RemocaoService.registrarCheckin(remocaoId, data)
-    if (!result.error) {
-      startTracking()
-      setStep('in_transit')
-
+    if (result.error) {
+      console.error('[DriverInterface] Erro ao registrar check-in:', result.error)
+      alert('Erro ao registrar check-in: ' + (result.error.message || 'Falha desconhecida'))
+      return
+    }
+    // Só inserir GPS se posição válida existir
+    if (position?.coords.latitude && position?.coords.longitude) {
       await supabase.from('remocao_gps_posicao').insert({
         remocao_id: remocaoId,
         motorista_id: data.motorista_id,
         veiculo_id: data.veiculo_id,
-        latitude: position?.coords.latitude || 0,
-        longitude: position?.coords.longitude || 0,
-        accuracy: position?.coords.accuracy || null,
-        heading: position?.coords.heading || null,
-        speed: position?.coords.speed || null,
-        altitude: position?.coords.altitude || null,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy ?? null,
+        heading: position.coords.heading ?? null,
+        speed: position.coords.speed ?? null,
+        altitude: position.coords.altitude ?? null,
       })
-
-      window.location.reload()
     }
+    startTracking()
+    setStep('in_transit')
+    window.location.reload()
   }
 
   const handleRegisterIntercorrencia = async (data: any) => {
@@ -96,19 +101,34 @@ export function DriverInterface({ remocaoId }: { remocaoId: string }) {
 
   const handleArrived = async () => {
     if (!user) return
-    await RemocaoService.transicionarStatus(remocaoId, 'CHEGADA_DESTINO', user.id, user.tenant_id)
+    const result = await RemocaoService.transicionarStatus(remocaoId, 'CHEGADA_DESTINO', user.id, user.tenant_id)
+    if (result.error) {
+      console.error('[DriverInterface] Erro ao registrar chegada:', result.error)
+      alert('Erro ao registrar chegada: ' + (result.error.message || 'Falha desconhecida'))
+      return
+    }
     setStep('arrived')
   }
 
   const handlePatientDelivered = async () => {
     if (!user) return
-    await RemocaoService.transicionarStatus(remocaoId, 'PACIENTE_ENTREGUE', user.id, user.tenant_id)
+    const result = await RemocaoService.transicionarStatus(remocaoId, 'PACIENTE_ENTREGUE', user.id, user.tenant_id)
+    if (result.error) {
+      console.error('[DriverInterface] Erro ao registrar entrega:', result.error)
+      alert('Erro ao registrar entrega: ' + (result.error.message || 'Falha desconhecida'))
+      return
+    }
     setStep('delivered')
   }
 
   const handleStartReturn = async () => {
     if (!user) return
-    await RemocaoService.transicionarStatus(remocaoId, 'RETORNANDO', user.id, user.tenant_id)
+    const result = await RemocaoService.transicionarStatus(remocaoId, 'RETORNANDO', user.id, user.tenant_id)
+    if (result.error) {
+      console.error('[DriverInterface] Erro ao iniciar retorno:', result.error)
+      alert('Erro ao iniciar retorno: ' + (result.error.message || 'Falha desconhecida'))
+      return
+    }
     setStep('checkout')
   }
 

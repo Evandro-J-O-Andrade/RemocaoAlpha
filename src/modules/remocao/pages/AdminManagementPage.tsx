@@ -81,7 +81,7 @@ export function AdminManagementPage() {
       if (currentTab === 'users') {
         const { data, error: err, count } = await supabase
           .from('tenant_memberships')
-          .select('*, person:people(nome, email), role:roles(nome, key)', { count: 'exact' })
+          .select('*, person:people!person_id(nome, email), role:roles!role_id(nome, key)', { count: 'exact' })
           .order('convidado_em', { ascending: false })
           .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
         if (err) throw err

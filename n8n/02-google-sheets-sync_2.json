@@ -1,0 +1,51 @@
+{
+  "name": "RemocaoAlpha - Google Sheets Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "INSERT",
+          "UPDATE"
+        ],
+        "table": "remocoes"
+      },
+      "id": "remocao-trigger",
+      "name": "Nova Remoção Criada",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": "SEU_SHEET_ID_AQUI",
+        "sheetName": "Remoções",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "schema": {
+            "codigo": "={{ $json.codigo }}",
+            "paciente": "={{ $json.paciente_nome }}",
+            "cpf": "={{ $json.cpf }}",
+            "origem": "={{ $json.origem_desc }}",
+            "destino": "={{ $json.destino_desc }}",
+            "status": "={{ $json.status }}",
+            "motorista": "={{ $json.motorista_nome }}",
+            "km_total": "={{ $json.km_total }}",
+            "sigtap": "={{ $json.sigtap_codigo }}",
+            "data": "={{ $now }}"
+          }
+        }
+      },
+      "id": "sheets-append",
+      "name": "Append Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ]
+    }
+  ]
+}

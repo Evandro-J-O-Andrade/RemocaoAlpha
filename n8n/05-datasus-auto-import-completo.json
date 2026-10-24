@@ -1,0 +1,307 @@
+{
+  "name": "RemocaoAlpha - DATASUS Auto Import Mensal - SIGTAP CID10 CBO",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 5 * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-mensal",
+      "name": "Cron Mensal - Dia 5 as 3AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "SIGTAP atualiza todo mês no DATASUS. Roda dia 5 as 3AM"
+    },
+    {
+      "parameters": {
+        "url": "=http://sigtap.datasus.gov.br/tabela-unificada/app/download.jsp",
+        "options": {
+          "response": {
+            "fullResponse": true
+          }
+        }
+      },
+      "id": "fetch-download-page",
+      "name": "Busca Página Download SIGTAP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        250,
+        0
+      ],
+      "notes": "Pega link do ZIP mais recente - ex: sigtap_202510.zip"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai link do ZIP mais recente da página HTML\nconst html = $input.first().json.body || $input.first().json.data;\n// Regex para pegar sigtap_YYYYMM.zip\nconst match = html.match(/sigtap_(\\d{6})\\.zip/i);\nconst competencia = match ? match[1] : new Date().toISOString().slice(0,7).replace('-','');\nconst zipUrl = `http://sigtap.datasus.gov.br/tabela-unificada/app/download/sigtap_${competencia}.zip`;\nreturn [{competencia, zipUrl, html_length: html.length}];"
+      },
+      "id": "extract-zip-url",
+      "name": "Extrai URL do ZIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.zipUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "file"
+            },
+            "timeout": 120000
+          }
+        },
+        "sendBinaryProperty": true,
+        "binaryPropertyName": "data"
+      },
+      "id": "download-zip",
+      "name": "Baixa ZIP SIGTAP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        750,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "data",
+        "options": {
+          "keepOnly": [
+            "tb_procedimento.txt",
+            "tb_grupo.txt",
+            "tb_sub_grupo.txt"
+          ]
+        }
+      },
+      "id": "extract-zip",
+      "name": "Extrai Arquivos TXT",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Converte TXT delimitado ; para JSON\nconst files = $input.all();\nlet procedimentos = [];\nfor (const file of files) {\n  const content = file.binary?.data?.toString() || '';\n  const lines = content.split('\\n');\n  const header = lines[0].split(';');\n  for (let i=1; i<Math.min(lines.length, 10000); i++) {\n    const cols = lines[i].split(';');\n    if (cols.length > 5) {\n      procedimentos.push({\n        codigo: cols[0]?.replace(/\"/g,''),\n        nome: cols[1]?.replace(/\"/g,''),\n        grupo: cols[2],\n        subgrupo: cols[3],\n        valor_sh: parseFloat(cols[4] || 0),\n        valor_sa: parseFloat(cols[5] || 0)\n      });\n    }\n  }\n}\nreturn procedimentos.slice(0, 500).map(p => ({json: p}));"
+      },
+      "id": "parse-txt",
+      "name": "Parse TXT para JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "table": "sigtap_procedimentos",
+        "matchingColumns": [
+          "codigo"
+        ],
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        }
+      },
+      "id": "upsert-sigtap",
+      "name": "Upsert SIGTAP no Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase RemocaoAlpha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://www2.datasus.gov.br/cid10/v2008/downloads/CID10CSV.zip",
+        "options": {
+          "response": {
+            "responseFormat": "file"
+          },
+          "timeout": 60000
+        },
+        "sendBinaryProperty": true
+      },
+      "id": "download-cid10",
+      "name": "Baixa CID-10 ZIP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "table": "cid10",
+        "matchingColumns": [
+          "codigo"
+        ]
+      },
+      "id": "upsert-cid10",
+      "name": "Upsert CID-10",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/kelvins/municipios-brasileiros/main/csv/cbo.csv",
+        "options": {}
+      },
+      "id": "fetch-cbo",
+      "name": "Busca CBO GitHub (mirror MTE)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        800
+      ],
+      "notes": "MTE oficial não tem API, usa mirror GitHub atualizado 2024 com 19 novas ocupações"
+    },
+    {
+      "parameters": {
+        "chatId": "SEU_TELEGRAM_ID",
+        "text": "✅ DATASUS Import concluído!\nSIGTAP: {{ $json.sigtap_count }} procedimentos\nCID-10: {{ $json.cid_count }} códigos\nCBO: {{ $json.cbo_count }}\nCompetência: {{ $json.competencia }}\nPronto pra faturamento sem glosa.",
+        "additionalFields": {}
+      },
+      "id": "notify",
+      "name": "Notifica Telegram/Slack",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Cron Mensal - Dia 5 as 3AM": {
+      "main": [
+        [
+          {
+            "node": "Busca Página Download SIGTAP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Baixa CID-10 ZIP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca CBO GitHub (mirror MTE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Página Download SIGTAP": {
+      "main": [
+        [
+          {
+            "node": "Extrai URL do ZIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai URL do ZIP": {
+      "main": [
+        [
+          {
+            "node": "Baixa ZIP SIGTAP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa ZIP SIGTAP": {
+      "main": [
+        [
+          {
+            "node": "Extrai Arquivos TXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai Arquivos TXT": {
+      "main": [
+        [
+          {
+            "node": "Parse TXT para JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse TXT para JSON": {
+      "main": [
+        [
+          {
+            "node": "Upsert SIGTAP no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert SIGTAP no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Notifica Telegram/Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "remocao-alpha-datasus"
+  }
+}

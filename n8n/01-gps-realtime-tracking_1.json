@@ -1,0 +1,84 @@
+{
+  "name": "RemocaoAlpha - GPS Realtime Tracking",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "INSERT"
+        ],
+        "table": "gps_tracking",
+        "schema": "public"
+      },
+      "id": "supabase-trigger",
+      "name": "Supabase GPS Trigger",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Escuta cada insert de gps_tracking quando motorista aceita"
+    },
+    {
+      "parameters": {
+        "url": "https://maps.googleapis.com/maps/api/directions/json?origin={{$json.lat}},{{$json.lng}}&destination={{$json.destino_lat}},{{$json.destino_lng}}&key=YOUR_GOOGLE_KEY",
+        "sendQuery": true
+      },
+      "id": "calc-route",
+      "name": "Calcula Rota Google",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "table": "remocoes",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": {
+            "id": "={{ $json.remocao_id }}",
+            "status": "EM_TRANSITO_ORIGEM"
+          }
+        }
+      },
+      "id": "update-status",
+      "name": "Atualiza Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Supabase GPS Trigger": {
+      "main": [
+        [
+          {
+            "node": "Calcula Rota Google",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcula Rota Google": {
+      "main": [
+        [
+          {
+            "node": "Atualiza Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

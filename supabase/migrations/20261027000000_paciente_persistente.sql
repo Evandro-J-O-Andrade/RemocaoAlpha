@@ -19,9 +19,12 @@ create table if not exists public.paciente (
   cmdpro text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
-  constraint paciente_nome_nao_vazio check (btrim(nome) <> ''),
-  constraint paciente_cpf_unico_por_tenant unique (tenant_id, cpf) where cpf is not null
+  constraint paciente_nome_nao_vazio check (btrim(nome) <> '')
 );
+
+create unique index if not exists paciente_cpf_unico_por_tenant
+  on public.paciente (tenant_id, cpf)
+  where cpf is not null;
 
 create index if not exists idx_paciente_tenant_nome on public.paciente (tenant_id, nome);
 create index if not exists idx_paciente_tenant_cpf on public.paciente (tenant_id, cpf) where cpf is not null;

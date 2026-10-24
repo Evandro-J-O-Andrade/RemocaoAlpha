@@ -1,0 +1,40 @@
+{
+  "name": "RemocaoAlpha - SIGTAP Sync Diário",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutes": 2
+            }
+          ]
+        }
+      },
+      "id": "cron",
+      "name": "Cron Diário 2AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://sigtap.datasus.gov.br/tabelaunificada/app/sec/inicio.jsp",
+        "options": {}
+      },
+      "id": "fetch-sigtap",
+      "name": "Busca SIGTAP API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "notes": "Use a API não oficial https://sigtap-api.herokuapp.com ou scrape oficial"
+    }
+  ]
+}

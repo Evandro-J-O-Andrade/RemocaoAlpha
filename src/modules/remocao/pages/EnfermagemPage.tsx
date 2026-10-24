@@ -1,19 +1,19 @@
-export default function EnfermagemPage() {
+Ôªøexport default function EnfermagemPage() {
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
-      <h1 className="text-2xl font-black text-white">EvoluÁ„o de Enfermagem</h1>
+      <h1 className="text-2xl font-black text-white">Evolu√ß√£o de Enfermagem</h1>
       <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-6">
-        <p className="text-sm text-slate-400">COREN auto-preenchido ao logar. Referencie mÈdico por CRM, fisio por CREFITO, nutri por CRN.</p>
+        <p className="text-sm text-slate-400">COREN auto-preenchido ao logar. Referencie m√©dico por CRM, fisio por CREFITO, nutri por CRN.</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <select className="bg-[#020617] border border-white/10 rounded-xl px-4 py-3 text-sm"><option>MÈdico - Busca CRM</option><option>Dr. Silva - CRM 12345/SP</option></select>
+          <select className="bg-[#020617] border border-white/10 rounded-xl px-4 py-3 text-sm"><option>M√©dico - Busca CRM</option><option>Dr. Silva - CRM 12345/SP</option></select>
           <select className="bg-[#020617] border border-white/10 rounded-xl px-4 py-3 text-sm"><option>Fisio - CREFITO</option></select>
         </div>
-        <textarea rows={5} placeholder="EvoluÁ„o de enfermagem..." className="w-full mt-4 bg-[#020617] border border-white/10 rounded-xl p-3 text-sm" />
-        <button className="mt-4 w-full bg-white text-black font-bold py-3 rounded-xl">Salvar EvoluÁ„o - Vincula com paciente</button>
+        <textarea rows={5} placeholder="Evolu√ß√£o de enfermagem..." className="w-full mt-4 bg-[#020617] border border-white/10 rounded-xl p-3 text-sm" />
+        <button className="mt-4 w-full bg-white text-black font-bold py-3 rounded-xl">Salvar Evolu√ß√£o - Vincula com paciente</button>
       </div>
       <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-6">
         <h3 className="font-bold text-white">Checklist Duplo - Bate com motorista</h3>
-        <p className="text-xs text-slate-400 mt-1">Seu checklist ser· comparado com o do motorista automaticamente.</p>
+        <p className="text-xs text-slate-400 mt-1">Seu checklist ser√° comparado com o do motorista automaticamente.</p>
       </div>
     </div>
   )

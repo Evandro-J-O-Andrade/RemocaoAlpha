@@ -1,0 +1,48 @@
+{
+  "name": "RemocaoAlpha - CMDPro Import Automático",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/webhook/cmdpro-import",
+        "method": "POST"
+      },
+      "id": "webhook",
+      "name": "Webhook CMDPro",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "table": "pacientes",
+        "operation": "upsert",
+        "matchingColumns": [
+          "cpf"
+        ],
+        "columns": {
+          "cpf": "={{ $json.cpf }}",
+          "nome_completo": "={{ $json.nome }}",
+          "rg": "={{ $json.rg }}",
+          "cns": "={{ $json.cns }}",
+          "data_nascimento": "={{ $json.data_nascimento }}",
+          "logradouro": "={{ $json.logradouro }}",
+          "bairro": "={{ $json.bairro }}",
+          "cidade": "={{ $json.cidade }}",
+          "id_externo_cmdpro": "={{ $json.id }}",
+          "origem_importacao": "CMDPRO"
+        }
+      },
+      "id": "upsert",
+      "name": "Upsert Paciente por CPF",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ]
+    }
+  ]
+}

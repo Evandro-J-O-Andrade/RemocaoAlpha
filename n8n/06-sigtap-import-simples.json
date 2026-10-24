@@ -1,0 +1,57 @@
+{
+  "name": "RemocaoAlpha - SIGTAP Import Simples (Recomendado)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 6 * *"
+            }
+          ]
+        }
+      },
+      "id": "cron",
+      "name": "Cron Mensal",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://sigtap-api.herokuapp.com/api/procedimentos?search=TRANSPORTE",
+        "options": {}
+      },
+      "id": "api-sigtap",
+      "name": "API SIGTAP Não Oficial (mais fácil)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        250,
+        0
+      ],
+      "notes": "API comunitária que já parseia o DATASUS. Se offline, usa método ZIP acima."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "table": "sigtap_procedimentos",
+        "matchingColumns": [
+          "codigo"
+        ]
+      },
+      "id": "upsert",
+      "name": "Upsert Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        500,
+        0
+      ]
+    }
+  ]
+}

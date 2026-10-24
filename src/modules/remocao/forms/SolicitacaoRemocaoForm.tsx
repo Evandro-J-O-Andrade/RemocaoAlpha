@@ -6,7 +6,8 @@ import { MapPin, User, Stethoscope, AlertCircle, Clock, FileUp, FileText, X, Pap
 import { supabase } from '@/lib/supabase/client'
 import { RemocaoRepository } from '@/modules/remocao/repositories/remocaoRepository'
 import { DestinoExternoPicker } from '@/modules/remocao/components/DestinoExternoPicker'
-import { Cid10Select } from '@/modules/remocao/components/TabelaBusca'
+import { Cid10Select, SigtapSelect, CboSelect } from '@/modules/remocao/components/TabelaBusca'
+import { RemocaoProcedimentoRepository } from '@/modules/remocao/repositories/remocaoProcedimentoRepository'
 
 const optionalUuid = z.preprocess(
   (value) => value === '' || value == null ? undefined : value,
@@ -111,6 +112,7 @@ export function SolicitacaoRemocaoForm({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitNotice, setSubmitNotice] = useState<string | null>(null)
   const [destinoExternoId, setDestinoExternoId] = useState<string | null>(null)
+  const [selectedProcedimentos, setSelectedProcedimentos] = useState<Array<{ sigtap: any; cid: any; cbo: any }>>([])
   const [createdRemocaoId, setCreatedRemocaoId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -212,6 +214,23 @@ export function SolicitacaoRemocaoForm({
         setSubmitError(message)
         onError?.(message)
         return
+      }
+
+      // Persistir procedimentos vinculados (SIGTAP + CID-10 + CBO) na tabela de relacionamento
+      if (selectedProcedimentos.length > 0) {
+        for (const proc of selectedProcedimentos) {
+          await RemocaoProcedimentoRepository.create(tenantId, {
+            remocao_id: result.data.id,
+            sigtap_codigo: proc.sigtap?.codigo ?? null,
+            sigtap_nome: proc.sigtap?.nome ?? null,
+            sigtap_valor_total: proc.sigtap?.valor_total ?? null,
+            sigtap_competencia: proc.sigtap?.competencia ?? null,
+            cid10_codigo: proc.cid?.codigo ?? null,
+            cid10_descricao: proc.cid?.descricao ?? null,
+            cbo_codigo: proc.cbo?.codigo ?? null,
+            cbo_titulo: proc.cbo?.titulo ?? null,
+          })
+        }
       }
 
       if (documentos.length > 0) {
@@ -408,6 +427,55 @@ export function SolicitacaoRemocaoForm({
             <div className="md:col-span-2">
               <DestinoExternoPicker tenantId={tenantId} value={destinoExternoId} onChange={(id) => setDestinoExternoId(id)} />
             </div>
+        </div>
+      </fieldset>
+
+      {/* Procedimentos e Exames vinculados */}
+      <fieldset className="border rounded-lg p-4">
+        <legend className="px-2 text-sm font-medium text-foreground">Procedimentos e Exames Vinculados (SIGTAP / CID-10 / CBO)</legend>
+        <p className="text-xs text-muted-foreground mb-3">Selecione os procedimentos, exames e códigos que serão realizados no destino. Os vínculos serão persistidos na solicitação para rastreabilidade em relatórios.</p>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Cid10Select onChange={(r) => {
+              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
+              if (last && !last.cid) {
+                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, cid: r }])
+              } else {
+                setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: r, cbo: null }])
+              }
+            }} />
+            <SigtapSelect onChange={(r) => {
+              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
+              if (last && !last.sigtap) {
+                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, sigtap: r }])
+              } else {
+                setSelectedProcedimentos(prev => [...prev, { sigtap: r, cid: null, cbo: null }])
+              }
+            }} />
+            <CboSelect onChange={(r) => {
+              const last = selectedProcedimentos[selectedProcedimentos.length - 1]
+              if (last && !last.cbo) {
+                setSelectedProcedimentos(prev => [...prev.slice(0, -1), { ...last, cbo: r }])
+              } else {
+                setSelectedProcedimentos(prev => [...prev, { sigtap: null, cid: null, cbo: r }])
+              }
+            }} />
+          </div>
+          {selectedProcedimentos.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs font-medium">Vínculos selecionados ({selectedProcedimentos.length}):</p>
+              {selectedProcedimentos.map((p, i) => (
+                <div key={i} className="text-xs bg-muted/50 rounded p-2 flex justify-between items-center">
+                  <span>
+                    {p.cid ? `CID: ${p.cid.codigo}` : ''}
+                    {p.sigtap ? ` | SIGTAP: ${p.sigtap.codigo}` : ''}
+                    {p.cbo ? ` | CBO: ${p.cbo.codigo}` : ''}
+                  </span>
+                  <button type="button" onClick={() => setSelectedProcedimentos(prev => prev.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">Remover</button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </fieldset>
 
