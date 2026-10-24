@@ -41,5 +41,5 @@ export function hasEffectivePermission(
 ): boolean {
   if (isRoot) return true
   const requiredList = Array.isArray(required) ? required : [required]
-  return requiredList.every((p) => permissions.includes(p))
+  return requiredList.some((p) => permissions.includes(p))
 }
