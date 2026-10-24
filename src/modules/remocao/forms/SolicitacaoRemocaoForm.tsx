@@ -334,10 +334,11 @@ export function SolicitacaoRemocaoForm({
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Diagnóstico</label>
-            <input type="text" {...register('paciente_diagnostico')} className="w-full px-3 py-2 border border-border rounded" placeholder="CID + descrição" />
-            <div className="mt-2">
-              <Cid10Select onChange={(r) => setValue('paciente_diagnostico', `${r.codigo} - ${r.descricao}`)} />
-            </div>
+            <Cid10Select
+              value={watch('paciente_diagnostico') || ''}
+              onTextChange={(text) => setValue('paciente_diagnostico', text, { shouldDirty: true, shouldValidate: true })}
+              onChange={(r) => setValue('paciente_diagnostico', `${r.codigo} - ${r.descricao}`, { shouldDirty: true, shouldValidate: true })}
+            />
           </div>
         </div>
 
