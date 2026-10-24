@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu, User, ChevronLeft, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
@@ -10,8 +10,21 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+  )
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches)
+      setMobileMenuOpen(false)
+    }
+
+    setIsMobile(mediaQuery.matches)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   const hasPerm = (p: string) => Boolean(user?.permissions.includes(p as any) || user?.is_root)
   const hasAnyPerm = (permissions: string[]) => Boolean(user?.is_root || permissions.some((permission) => user?.permissions.includes(permission as any)))
@@ -20,8 +33,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="auth-layout">
       <button
         className="auth-mobile-menu-toggle"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        aria-label="Abrir menu"
+        onClick={() => setMobileMenuOpen((open) => !open)}
+        aria-label={mobileMenuOpen ? 'Recolher menu lateral' : 'Expandir menu lateral'}
       >
         <Menu size={20} />
       </button>
@@ -38,8 +51,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           'auth-sidebar',
-          sidebarOpen ? 'auth-sidebar--open' : 'auth-sidebar--closed',
-          isMobile && !mobileMenuOpen ? 'auth-sidebar--mobile-closed' : ''
+          isMobile
+            ? (mobileMenuOpen ? 'auth-sidebar--mobile-open' : 'auth-sidebar--mobile-closed')
+            : (sidebarOpen ? 'auth-sidebar--open' : 'auth-sidebar--closed')
         )}
       >
         <div className="auth-sidebar__brand">
@@ -50,7 +64,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               className="auth-sidebar__logo-img"
             />
           </div>
-          {sidebarOpen && !isMobile && (
+          {(isMobile ? mobileMenuOpen : sidebarOpen) && (
             <span className="auth-sidebar__brand-text">Remocao Alpha</span>
           )}
         </div>
@@ -63,7 +77,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               onClick={() => { if (isMobile) setMobileMenuOpen(false) }}
             >
               <span className="auth-sidebar__nav-icon"><User size={18} /></span>
-              {sidebarOpen && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
+              {(!isMobile || mobileMenuOpen) && <span className="auth-sidebar__nav-label">Central de Remocoes</span>}
             </Link>
           )}
           {hasPerm(Perm.REMOCACAO_SOLICITAR) && (
@@ -132,7 +146,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               <User size={20} />
             </div>
             <div className="auth-sidebar__user-info">
-              {sidebarOpen && (
+              {(!isMobile || mobileMenuOpen) && (
                 <>
                   <div className="auth-sidebar__user-name">
                     {user?.username || 'Usuario'}
@@ -146,12 +160,12 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </div>
           <button
             onClick={() => void signOut()}
-            className={cn('auth-sidebar__signout', sidebarOpen && 'auth-sidebar__signout--label')}
+            className={cn('auth-sidebar__signout', (!isMobile || mobileMenuOpen) && 'auth-sidebar__signout--label')}
             title="Sair da conta"
             aria-label="Sair da conta"
           >
             <LogOut size={18} />
-            {sidebarOpen && <span>Encerrar sessao</span>}
+            {(!isMobile || mobileMenuOpen) && <span>Encerrar sessao</span>}
           </button>
         </div>
       </aside>
@@ -160,10 +174,10 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <header className="auth-header">
           <button
             className="auth-header__sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => isMobile ? setMobileMenuOpen((open) => !open) : setSidebarOpen((open) => !open)}
             aria-label="Alternar sidebar"
           >
-            {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+            {(isMobile ? mobileMenuOpen : sidebarOpen) ? <ChevronLeft size={20} /> : <Menu size={20} />}
           </button>
           <div className="auth-header__title">
             <h1 className="auth-header__title-text">Gestao de Remocao Alpha</h1>
