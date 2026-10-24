@@ -26,6 +26,15 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <Menu size={20} />
       </button>
 
+      {isMobile && mobileMenuOpen && (
+        <button
+          type="button"
+          className="auth-sidebar-backdrop"
+          aria-label="Fechar menu lateral"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       <aside
         className={cn(
           'auth-sidebar',
