@@ -144,7 +144,7 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
 
 function CatalogoSelect({ tabela, label, placeholder, value, onTextChange, onChange }: { tabela: Catalogo; label: string; placeholder: string; value?: string; onTextChange?: (value: string) => void; onChange: (r: Registro) => void }) {
   const [query, setQuery] = useState(value || '')
-  useEffect(() => { if (value !== undefined && value !== query) setQuery(value) }, [value])
+  useEffect(() => { if (value !== undefined) setQuery(current => current === value ? current : value) }, [value])
   const [modalOpen, setModalOpen] = useState(false)
   const { resultados, loading, error } = useTabelaBusca(tabela, query)
 
