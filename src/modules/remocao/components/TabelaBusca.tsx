@@ -142,14 +142,17 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
   )
 }
 
-function CatalogoSelect({ tabela, label, placeholder, onChange }: { tabela: Catalogo; label: string; placeholder: string; onChange: (r: Registro) => void }) {
-  const [query, setQuery] = useState('')
+function CatalogoSelect({ tabela, label, placeholder, value, onTextChange, onChange }: { tabela: Catalogo; label: string; placeholder: string; value?: string; onTextChange?: (value: string) => void; onChange: (r: Registro) => void }) {
+  const [query, setQuery] = useState(value || '')
+  useEffect(() => { if (value !== undefined && value !== query) setQuery(value) }, [value])
   const [modalOpen, setModalOpen] = useState(false)
   const { resultados, loading, error } = useTabelaBusca(tabela, query)
 
   const select = (r: Registro) => {
+    const text = textoRegistro(tabela, r)
     onChange(r)
-    setQuery(textoRegistro(tabela, r))
+    onTextChange?.(text)
+    setQuery(text)
     setModalOpen(false)
   }
 
@@ -157,7 +160,7 @@ function CatalogoSelect({ tabela, label, placeholder, onChange }: { tabela: Cata
     <div className="relative min-w-0">
       <label className="mb-1 block text-xs font-medium text-foreground">{label}</label>
       <div className="flex gap-2">
-        <input value={query} onChange={e => setQuery(e.target.value)} placeholder={placeholder} className="mt-1 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+        <input value={query} onChange={e => { setQuery(e.target.value); onTextChange?.(e.target.value) }} placeholder={placeholder} className="mt-1 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
         <button type="button" onClick={() => setModalOpen(true)} title={`Pesquisar no catálogo completo: ${label}`} aria-label={`Pesquisar no catálogo completo: ${label}`} className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Search size={18} /></button>
       </div>
       {loading && <p className="mt-1 text-xs text-muted-foreground">Consultando sugestões…</p>}
@@ -174,8 +177,8 @@ function CatalogoSelect({ tabela, label, placeholder, onChange }: { tabela: Cata
   )
 }
 
-export function Cid10Select({ value: _value, onChange }: { value?: string; onChange: (v: any) => void }) {
-  return <CatalogoSelect tabela="cid10" label="CID-10 — diagnóstico" placeholder="Digite código ou doença, ex.: J18.9 ou Pneumonia" onChange={onChange} />
+export function Cid10Select({ value, onTextChange, onChange }: { value?: string; onTextChange?: (value: string) => void; onChange: (v: any) => void }) {
+  return <CatalogoSelect tabela="cid10" label="CID-10 — diagnóstico" placeholder="Digite código ou doença, ex.: J18.9 ou Pneumonia" value={value} onTextChange={onTextChange} onChange={onChange} />
 }
 
 export function SigtapSelect({ value: _value, onChange }: { value?: string; onChange: (v: any) => void }) {
