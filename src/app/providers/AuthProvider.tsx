@@ -31,6 +31,7 @@ export interface AuthUser {
   is_root: boolean
   password_reset_required: boolean
   resolvedAt: string | null
+  avatar_url: string | null
   // Campos legados mantidos para retrocompatibilidade com componentes existentes
   tenant_id: string
   tenant_nome: string
@@ -178,9 +179,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 1. Resolver pessoa (username via people.full_name)
       let pessoaNome = ''
       let passwordResetRequired = false
-      const { data: personData, error: personErr } = await supabase
+       const { data: personData, error: personErr } = await supabase
         .from('people')
-        .select('nome, email, password_reset_required')
+        .select('nome, email, password_reset_required, avatar_url')
         .eq('id', userId)
         .single()
 
@@ -227,17 +228,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // 5. Carregar permissoes efetivas
+      // 5. Carregar permissoes efetivas — propagar erro em vez de engolir silenciosamente
       let permissions: PermissionKey[] = []
       if (isRoot) {
         permissions = Object.values(Perm) as PermissionKey[]
       } else {
         const { data: perms, error: permsErr } = await supabase.rpc('get_user_permissions')
-        if (!permsErr && perms) {
-          permissions = (perms as any[])
-            .map((p) => (typeof p === 'string' ? p : p.permission_key))
-            .filter(Boolean) as PermissionKey[]
+        if (permsErr) {
+          console.error('[AuthProvider] Erro ao carregar permissoes:', permsErr.message, permsErr.code)
+          throw permsErr
         }
+         if (perms) {
+           permissions = (perms as any[])
+             .map((p) => (typeof p === 'string' ? p : (p.key || p.permission_key)))
+             .filter(Boolean) as PermissionKey[]
+         }
       }
 
       // 6. Determinar roles a partir dos memberships
@@ -255,13 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resolvedStatus = 'ready'
       }
 
-      // 8. Se nao tem tenant ativo mas tem memberships, usar o primeiro como ativo
-      if (!activeTenant && memberships.length > 0) {
-        const first = memberships[0]
-        activeTenant = { id: first.tenant_id, nome: '' }
-        tenantId = first.tenant_id
-        tenantPapel = first.papel
-      }
+      // 8. Nao selecionar silenciosamente o primeiro vinculo como tenant ativo (fonte de verdade: get_current_tenant_info)
 
       // 9. Username: people.full_name com fallback para email
       const username = pessoaNome || 'Usuário'
@@ -277,9 +276,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeTenant,
         memberships,
         permissions,
-        is_root: isRoot,
-        password_reset_required: passwordResetRequired,
-        resolvedAt: new Date().toISOString(),
+         is_root: isRoot,
+         password_reset_required: passwordResetRequired,
+         resolvedAt: new Date().toISOString(),
+         avatar_url: personData?.avatar_url || null,
         tenant_id: tenantId,
         tenant_nome: tenantNome,
         papel: tenantPapel || (roles.length > 0 ? roles[0] : ''),
@@ -367,7 +367,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (updateError) throw updateError
 
     if (user?.id) {
-      await supabase.rpc('clear_password_reset_flag', { p_person_id: user.id })
+      const { error: rpcError } = await supabase.rpc('clear_password_reset_flag', { p_person_id: user.id })
+      if (rpcError) throw rpcError
       setUser((prev) => prev ? { ...prev, password_reset_required: false } : null)
     }
   }
