@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import type { RemocaoChecklist } from '@/modules/remocao/types'
@@ -18,9 +18,13 @@ export function ChecklistForm({
   const [items, setItems] = useState<RemocaoChecklist[]>(initialItems || [])
   const [loading, setLoading] = useState(false)
 
-  const applicableItems = tipoTransporte
-    ? DEFAULT_CHECKLIST.filter((i) => i.tipos_aplicaveis.includes(tipoTransporte) || i.tipos_aplicaveis.includes('simple'))
-    : DEFAULT_CHECKLIST
+  const applicableItems = useMemo(
+    () =>
+      tipoTransporte
+        ? DEFAULT_CHECKLIST.filter((i) => i.tipos_aplicaveis.includes(tipoTransporte) || i.tipos_aplicaveis.includes('simple'))
+        : DEFAULT_CHECKLIST,
+    [tipoTransporte]
+  )
 
   useEffect(() => {
     const loadChecklist = async () => {
