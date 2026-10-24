@@ -7,6 +7,14 @@ type Registro = { codigo: string; descricao?: string; titulo?: string; nome?: st
 
 const PAGE_SIZE = 20
 
+// Valores de texto podem conter vírgulas, parênteses e outros caracteres que
+// fazem parte da sintaxe do operador .or() do PostgREST. Colocar o padrão entre
+// aspas impede que a descrição do catálogo seja interpretada como lógica.
+function filtroIlike(valor: string) {
+  const padrao = `%${valor.trim().replace(/\\/g, '\\\\').replace(/"/g, '\\"')}%`
+  return `"${padrao}"`
+}
+
 function catalogoConfig(tabela: Catalogo) {
   if (tabela === 'cid10') return { titulo: 'Catálogo CID-10', tabela: 'cid10', colunas: 'codigo, descricao', nome: 'descricao', fonte: 'DATASUS · CID-10' }
   if (tabela === 'cbo') return { titulo: 'Catálogo CBO', tabela: 'cbo_ocupacoes', colunas: 'codigo, titulo', nome: 'titulo', fonte: 'Classificação Brasileira de Ocupações' }
@@ -35,12 +43,12 @@ function useTabelaBusca(tabela: Catalogo, query: string) {
       setLoading(true)
       setError(null)
       try {
-        const q = `%${query.trim().replace(/"/g, '')}%`
+        const q = filtroIlike(query)
         const config = catalogoConfig(tabela)
         let request: any = supabase.from(config.tabela).select(config.colunas)
-        if (tabela === 'cid10') request = request.or(`codigo.ilike."${q}",descricao.ilike."${q}"`)
-        else if (tabela === 'cbo') request = request.or(`codigo.ilike."${q}",titulo.ilike."${q}"`)
-        else request = request.or(`codigo.ilike."${q}",nome.ilike."${q}"`).order('competencia', { ascending: false })
+        if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
+        else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
+        else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`).order('competencia', { ascending: false })
         const { data, error: queryError } = await request.limit(20)
         if (cancelled) return
         if (queryError) { setError(queryError.message); setResultados([]) }
@@ -78,10 +86,10 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
         let request: any = supabase.from(config.tabela).select(config.colunas, { count: 'exact' })
         const term = query.trim()
         if (term) {
-          const q = `%${term}%`.replace(/"/g, '')
-          if (tabela === 'cid10') request = request.or(`codigo.ilike."${q}",descricao.ilike."${q}"`)
-          else if (tabela === 'cbo') request = request.or(`codigo.ilike."${q}",titulo.ilike."${q}"`)
-          else request = request.or(`codigo.ilike."${q}",nome.ilike."${q}"`)
+          const q = filtroIlike(term)
+          if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
+          else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
+          else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`)
         }
         if (tabela === 'sigtap') request = request.order('competencia', { ascending: false }).order('codigo', { ascending: true })
         else request = request.order('codigo', { ascending: true })
@@ -113,7 +121,7 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
           <label htmlFor={`catalogo-${tabela}-busca`} className="mb-1.5 block text-sm font-medium">Código ou descrição</label>
           <div className="relative">
             <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input id={`catalogo-${tabela}-busca`} value={query} onChange={e => setQuery(e.target.value)} placeholder="Digite para filtrar; deixe vazio para navegar por tudo" className="min-h-11 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" autoFocus />
+            <input id={`catalogo-${tabela}-busca`} value={query} onChange={e => setQuery(e.target.value)} placeholder="Digite para filtrar; deixe vazio para navegar por tudo" className="catalogo-modal-input min-h-11 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" autoFocus />
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
@@ -146,13 +154,17 @@ function CatalogoSelect({ tabela, label, placeholder, value, onTextChange, onCha
   const [query, setQuery] = useState(value || '')
   useEffect(() => { if (value !== undefined) setQuery(current => current === value ? current : value) }, [value])
   const [modalOpen, setModalOpen] = useState(false)
-  const { resultados, loading, error } = useTabelaBusca(tabela, query)
+  const [selectionCommitted, setSelectionCommitted] = useState(false)
+  // Depois de selecionar, mantém o código/descrição visível sem disparar nova
+  // busca com o texto completo. A digitação seguinte reativa o autocomplete.
+  const { resultados, loading, error } = useTabelaBusca(tabela, selectionCommitted ? '' : query)
 
   const select = (r: Registro) => {
     const text = textoRegistro(tabela, r)
     onChange(r)
     onTextChange?.(text)
     setQuery(text)
+    setSelectionCommitted(true)
     setModalOpen(false)
   }
 
@@ -160,14 +172,14 @@ function CatalogoSelect({ tabela, label, placeholder, value, onTextChange, onCha
     <div className="relative min-w-0">
       <label className="mb-1 block text-xs font-medium text-foreground">{label}</label>
       <div className="flex gap-2">
-        <input value={query} onChange={e => { setQuery(e.target.value); onTextChange?.(e.target.value) }} placeholder={placeholder} className="mt-1 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+        <input value={query} onChange={e => { setSelectionCommitted(false); setQuery(e.target.value); onTextChange?.(e.target.value) }} placeholder={placeholder} className="catalogo-select-input mt-1 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
         <button type="button" onClick={() => setModalOpen(true)} title={`Pesquisar no catálogo completo: ${label}`} aria-label={`Pesquisar no catálogo completo: ${label}`} className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Search size={18} /></button>
       </div>
       {loading && <p className="mt-1 text-xs text-muted-foreground">Consultando sugestões…</p>}
       {error && <p role="status" className="mt-1 text-xs text-destructive">Falha na sugestão: {error}</p>}
       {resultados.length > 0 && query.trim().length >= 2 && (
-        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
-          {resultados.map(r => <button key={`${r.codigo}-${r.competencia || ''}`} type="button" onClick={() => select(r)} className="block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-0 hover:bg-muted focus-visible:bg-muted">
+        <div className="catalogo-select-suggestions absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border bg-card text-foreground shadow-xl">
+          {resultados.map(r => <button key={`${r.codigo}-${r.competencia || ''}`} type="button" onClick={() => select(r)} className="catalogo-select-option block w-full border-b border-border bg-card px-3 py-2.5 text-left text-sm text-foreground last:border-0 hover:bg-muted focus-visible:bg-muted">
             <span className="font-mono font-semibold">{r.codigo}</span><span> — {tabela === 'cid10' ? r.descricao : tabela === 'cbo' ? r.titulo : r.nome}</span>{tabela === 'sigtap' && <span className="block text-xs text-muted-foreground">Competência {r.competencia || 'não informada'}{r.valor_total != null ? ` · R$ ${r.valor_total}` : ''}</span>}
           </button>)}
         </div>
