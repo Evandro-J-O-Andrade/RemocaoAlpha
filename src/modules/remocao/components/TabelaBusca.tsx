@@ -1,10 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Search, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 
 type Catalogo = 'sigtap' | 'cid10' | 'cbo'
+type Registro = { codigo: string; descricao?: string; titulo?: string; nome?: string; valor_total?: number | string | null; competencia?: string }
+
+const PAGE_SIZE = 20
+
+function catalogoConfig(tabela: Catalogo) {
+  if (tabela === 'cid10') return { titulo: 'Catálogo CID-10', tabela: 'cid10', colunas: 'codigo, descricao', nome: 'descricao', fonte: 'DATASUS · CID-10' }
+  if (tabela === 'cbo') return { titulo: 'Catálogo CBO', tabela: 'cbo_ocupacoes', colunas: 'codigo, titulo', nome: 'titulo', fonte: 'Classificação Brasileira de Ocupações' }
+  return { titulo: 'Catálogo SIGTAP', tabela: 'sigtap_procedimentos', colunas: 'codigo, nome, valor_total, competencia', nome: 'nome', fonte: 'SIGTAP · DATASUS' }
+}
+
+function textoRegistro(tabela: Catalogo, r: Registro) {
+  const nome = tabela === 'cid10' ? r.descricao : tabela === 'cbo' ? r.titulo : r.nome
+  return [r.codigo, nome].filter(Boolean).join(' - ')
+}
 
 function useTabelaBusca(tabela: Catalogo, query: string) {
-  const [resultados, setResultados] = useState<any[]>([])
+  const [resultados, setResultados] = useState<Registro[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -21,150 +36,167 @@ function useTabelaBusca(tabela: Catalogo, query: string) {
       setError(null)
       try {
         const q = `%${query.trim()}%`
-        let request
-        if (tabela === 'cid10') {
-          request = supabase.from('cid10').select('codigo, descricao').or(`codigo.ilike.${q},descricao.ilike.${q}`).limit(20)
-        } else if (tabela === 'cbo') {
-          request = supabase.from('cbo_ocupacoes').select('codigo, titulo').or(`codigo.ilike.${q},titulo.ilike.${q}`).limit(20)
-        } else {
-          request = supabase.from('sigtap_procedimentos').select('codigo, nome, valor_total, competencia').or(`codigo.ilike.${q},nome.ilike.${q}`).order('competencia', { ascending: false }).limit(20)
-        }
-        const { data, error: queryError } = await request
+        const config = catalogoConfig(tabela)
+        let request: any = supabase.from(config.tabela).select(config.colunas)
+        if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
+        else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
+        else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`).order('competencia', { ascending: false })
+        const { data, error: queryError } = await request.limit(20)
         if (cancelled) return
-        if (queryError) {
-          setError(queryError.message)
-          setResultados([])
-        } else {
-          setResultados(data || [])
-        }
+        if (queryError) { setError(queryError.message); setResultados([]) }
+        else setResultados((data || []) as Registro[])
       } catch (cause) {
-        if (cancelled) return
-        setError(cause instanceof Error ? cause.message : 'Falha na consulta.')
-        setResultados([])
+        if (!cancelled) { setError(cause instanceof Error ? cause.message : 'Falha na consulta.'); setResultados([]) }
       } finally {
         if (!cancelled) setLoading(false)
       }
-    }, 300)
+    }, 250)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [tabela, query])
 
   return { resultados, loading, error }
 }
 
-export function Cid10Select({ value: _value, onChange }: { value?: string, onChange: (v: any) => void }) {
+function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSelect: (r: Registro) => void; onClose: () => void }) {
   const [query, setQuery] = useState('')
-  const { resultados, loading, error } = useTabelaBusca('cid10', query)
+  const [page, setPage] = useState(0)
+  const [resultados, setResultados] = useState<Registro[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const config = catalogoConfig(tabela)
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  useEffect(() => { setPage(0) }, [query])
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        let request: any = supabase.from(config.tabela).select(config.colunas, { count: 'exact' })
+        const term = query.trim()
+        if (term) {
+          const q = `%${term}%`
+          if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
+          else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
+          else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`)
+        }
+        if (tabela === 'sigtap') request = request.order('competencia', { ascending: false }).order('codigo', { ascending: true })
+        else request = request.order('codigo', { ascending: true })
+        const { data, count, error: queryError } = await request.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
+        if (cancelled) return
+        if (queryError) { setError(queryError.message); setResultados([]); setTotal(0) }
+        else { setResultados((data || []) as Registro[]); setTotal(count || 0) }
+      } catch (cause) {
+        if (!cancelled) { setError(cause instanceof Error ? cause.message : 'Falha ao carregar o catálogo.'); setResultados([]); setTotal(0) }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [tabela, query, page, config.tabela, config.colunas])
 
   return (
-    <div className="relative">
-      <label className="text-xs text-slate-400">CID-10 (para exame externo e faturamento)</label>
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Digite CID ou descricao - ex: J18.9 ou Pneumonia"
-        className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:border-yellow-400 outline-none"
-      />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
-      {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
-      {resultados.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
-          {resultados.map(r => (
-            <button
-              key={r.codigo}
-              type="button"
-              onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.descricao) }}
-              className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm text-white"
-            >
-              <span className="font-mono text-yellow-400">{r.codigo}</span> - {r.descricao}
-            </button>
-          ))}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 sm:p-6" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <section role="dialog" aria-modal="true" aria-labelledby={`catalogo-${tabela}-titulo`} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-2xl">
+        <header className="flex items-start justify-between gap-4 border-b border-border p-4 sm:p-5">
+          <div>
+            <h2 id={`catalogo-${tabela}-titulo`} className="text-lg font-bold">{config.titulo}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Pesquise por código ou descrição, ou navegue pelo catálogo completo.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar catálogo" className="rounded-md p-2 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X size={18} /></button>
+        </header>
+        <div className="border-b border-border p-4">
+          <label htmlFor={`catalogo-${tabela}-busca`} className="mb-1.5 block text-sm font-medium">Código ou descrição</label>
+          <div className="relative">
+            <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input id={`catalogo-${tabela}-busca`} value={query} onChange={e => setQuery(e.target.value)} placeholder="Digite para filtrar; deixe vazio para navegar por tudo" className="min-h-11 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" autoFocus />
+          </div>
         </div>
-      )}
-      <p className="text-[11px] text-slate-500 mt-1">Fonte oficial DATASUS CID-10</p>
+        <div className="min-h-0 flex-1 overflow-auto">
+          {loading ? <div className="flex items-center justify-center gap-2 p-10 text-sm text-muted-foreground"><Loader2 size={18} className="animate-spin" /> Carregando catálogo…</div>
+            : error ? <div role="alert" className="p-6 text-sm text-destructive">Não foi possível consultar o catálogo: {error}</div>
+            : resultados.length === 0 ? <div className="p-8 text-center text-sm text-muted-foreground">Nenhum registro encontrado para este filtro.</div>
+            : <table className="w-full border-collapse text-left text-sm">
+              <thead className="sticky top-0 bg-muted text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-4 py-3">Código</th><th className="px-4 py-3">Descrição</th>{tabela === 'sigtap' && <th className="px-4 py-3 text-right">Valor</th>}<th className="px-4 py-3 text-right">Ação</th></tr></thead>
+              <tbody>{resultados.map((r, i) => <tr key={`${r.codigo}-${r.competencia || ''}-${i}`} className="border-t border-border hover:bg-muted/50">
+                <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold">{r.codigo}</td>
+                <td className="min-w-[220px] px-4 py-3">{tabela === 'cid10' ? r.descricao : tabela === 'cbo' ? r.titulo : r.nome}{tabela === 'sigtap' && r.competencia && <span className="mt-1 block text-xs text-muted-foreground">Competência {r.competencia}</span>}</td>
+                {tabela === 'sigtap' && <td className="whitespace-nowrap px-4 py-3 text-right">{r.valor_total == null ? '—' : Number(r.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>}
+                <td className="px-4 py-3 text-right"><button type="button" onClick={() => onSelect(r)} className="rounded-md border border-primary px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10">Selecionar</button></td>
+              </tr>)}</tbody>
+            </table>}
+        </div>
+        <footer className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-xs text-muted-foreground">{total.toLocaleString('pt-BR')} registros · Página {Math.min(page + 1, totalPages)} de {totalPages} · {config.fonte}</span>
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" disabled={page === 0 || loading} onClick={() => setPage(p => Math.max(0, p - 1))} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={16} /> Anterior</button>
+            <button type="button" disabled={page + 1 >= totalPages || loading} onClick={() => setPage(p => p + 1)} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40">Próxima <ChevronRight size={16} /></button>
+          </div>
+        </footer>
+      </section>
     </div>
   )
 }
 
-export function SigtapSelect({ value: _value, onChange }: { value?: string, onChange: (v: any) => void }) {
+function CatalogoSelect({ tabela, label, placeholder, onChange }: { tabela: Catalogo; label: string; placeholder: string; onChange: (r: Registro) => void }) {
   const [query, setQuery] = useState('')
-  const { resultados, loading, error } = useTabelaBusca('sigtap', query)
+  const [modalOpen, setModalOpen] = useState(false)
+  const { resultados, loading, error } = useTabelaBusca(tabela, query)
+
+  const select = (r: Registro) => {
+    onChange(r)
+    setQuery(textoRegistro(tabela, r))
+    setModalOpen(false)
+  }
 
   return (
-    <div className="relative">
-      <label className="text-xs text-slate-400">SIGTAP - Procedimento SUS (para exame externo e faturamento)</label>
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Ex: 0205020038 ou ULTRASSOM ABDOMEN"
-        className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:border-yellow-400 outline-none"
-      />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
-      {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
-      {resultados.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
-          {resultados.map(r => (
-            <button
-              key={`${r.codigo}-${r.competencia}`}
-              type="button"
-              onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.nome) }}
-              className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm"
-            >
-              <span className="font-mono text-emerald-400">{r.codigo}</span> - <span className="text-white">{r.nome}</span> - <span className="text-slate-400">R$ {r.valor_total}</span>
-            </button>
-          ))}
+    <div className="relative min-w-0">
+      <label className="mb-1 block text-xs font-medium text-foreground">{label}</label>
+      <div className="flex gap-2">
+        <input value={query} onChange={e => setQuery(e.target.value)} placeholder={placeholder} className="mt-1 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+        <button type="button" onClick={() => setModalOpen(true)} title={`Pesquisar no catálogo completo: ${label}`} aria-label={`Pesquisar no catálogo completo: ${label}`} className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Search size={18} /></button>
+      </div>
+      {loading && <p className="mt-1 text-xs text-muted-foreground">Consultando sugestões…</p>}
+      {error && <p role="status" className="mt-1 text-xs text-destructive">Falha na sugestão: {error}</p>}
+      {resultados.length > 0 && query.trim().length >= 2 && (
+        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
+          {resultados.map(r => <button key={`${r.codigo}-${r.competencia || ''}`} type="button" onClick={() => select(r)} className="block w-full border-b border-border px-3 py-2.5 text-left text-sm last:border-0 hover:bg-muted focus-visible:bg-muted">
+            <span className="font-mono font-semibold">{r.codigo}</span><span> — {tabela === 'cid10' ? r.descricao : tabela === 'cbo' ? r.titulo : r.nome}</span>{tabela === 'sigtap' && <span className="block text-xs text-muted-foreground">Competência {r.competencia || 'não informada'}{r.valor_total != null ? ` · R$ ${r.valor_total}` : ''}</span>}
+          </button>)}
         </div>
       )}
-      <p className="text-[11px] text-slate-500 mt-1">Fonte: SIGTAP (DATASUS)</p>
+      {modalOpen && <CatalogoModal tabela={tabela} onSelect={select} onClose={() => setModalOpen(false)} />}
     </div>
   )
 }
 
-export function CboSelect({ value: _value, onChange }: { value?: string, onChange: (v: any) => void }) {
-  const [query, setQuery] = useState('')
-  const { resultados, loading, error } = useTabelaBusca('cbo', query)
+export function Cid10Select({ value: _value, onChange }: { value?: string; onChange: (v: any) => void }) {
+  return <CatalogoSelect tabela="cid10" label="CID-10 — diagnóstico" placeholder="Digite código ou doença, ex.: J18.9 ou Pneumonia" onChange={onChange} />
+}
 
-  return (
-    <div className="relative">
-      <label className="text-xs text-slate-400">CBO - Classificacao Brasileira de Ocupacoes (para equipe)</label>
-      <input
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Ex: 515135 Socorrista, 223505 Enfermeiro, 225125 Medico clinico"
-        className="w-full mt-1 bg-[#020617] border border-white/10 rounded-xl px-4 py-3.5 text-sm"
-      />
-      {loading && <p className="text-[11px] text-slate-500 mt-1">Consultando...</p>}
-      {error && <p className="text-[11px] text-red-400 mt-1">{error}</p>}
-      {resultados.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-[#0F172A] border border-white/10 rounded-xl max-h-[200px] overflow-y-auto">
-          {resultados.map(r => (
-            <button key={r.codigo} type="button" onClick={() => { onChange(r); setQuery(r.codigo + ' - ' + r.titulo) }} className="w-full text-left px-4 py-3 hover:bg-white/10 text-sm text-white">
-              <span className="font-mono text-blue-400">{r.codigo}</span> - {r.titulo}
-            </button>
-          ))}
-        </div>
-      )}
-      <p className="text-[11px] text-slate-500 mt-1">Fonte: CBO (MTE)</p>
-    </div>
-  )
+export function SigtapSelect({ value: _value, onChange }: { value?: string; onChange: (v: any) => void }) {
+  return <CatalogoSelect tabela="sigtap" label="SIGTAP — procedimento / exame" placeholder="Digite código ou exame, ex.: ultrassom de abdome" onChange={onChange} />
+}
+
+export function CboSelect({ value: _value, onChange }: { value?: string; onChange: (v: any) => void }) {
+  return <CatalogoSelect tabela="cbo" label="CBO — ocupação profissional" placeholder="Digite código ou ocupação, ex.: enfermeiro" onChange={onChange} />
 }
 
 export function ExameExternoForm() {
-  const [cid, setCid] = useState<any>(null)
-  const [sigtap, setSigtap] = useState<any>(null)
+  const [cid, setCid] = useState<Registro | null>(null)
+  const [sigtap, setSigtap] = useState<Registro | null>(null)
 
   return (
-    <div className="space-y-4 p-4 bg-[#020617] border border-white/5 rounded-2xl">
-      <h3 className="font-bold text-white">Exame Externo - Vincula CID-10 + SIGTAP + CBO</h3>
-      <p className="text-xs text-slate-400">Quando paciente vai pra exame externo (UBS - Hospital - Clinica), precisa CID (por que faz) + SIGTAP (o que faz) + CBO (quem faz)</p>
-
+    <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+      <h3 className="font-bold text-foreground">Exame externo — CID-10 + SIGTAP</h3>
+      <p className="text-sm text-muted-foreground">O CID registra o diagnóstico; o SIGTAP identifica o procedimento. A compatibilidade clínica e de faturamento não é validada automaticamente.</p>
       <Cid10Select onChange={setCid} />
       <SigtapSelect onChange={setSigtap} />
-
-      {cid && sigtap && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300">
-          <strong>Compatibilidade nao verificada:</strong> CID {cid.codigo} e SIGTAP {sigtap.codigo} selecionados. A validacao de compatibilidade clinica/faturamento nao esta implementada.
-        </div>
-      )}
+      {cid && sigtap && <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-foreground"><strong>Selecionados:</strong> CID {cid.codigo} e SIGTAP {sigtap.codigo}.</div>}
     </div>
   )
 }
