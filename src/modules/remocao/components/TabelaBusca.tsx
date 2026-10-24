@@ -86,7 +86,7 @@ function CatalogoModal({ tabela, onSelect, onClose }: { tabela: Catalogo; onSele
         let request: any = supabase.from(config.tabela).select(config.colunas, { count: 'exact' })
         const term = query.trim()
         if (term) {
-          const q = `%${term}%`
+          const q = filtroIlike(term)
           if (tabela === 'cid10') request = request.or(`codigo.ilike.${q},descricao.ilike.${q}`)
           else if (tabela === 'cbo') request = request.or(`codigo.ilike.${q},titulo.ilike.${q}`)
           else request = request.or(`codigo.ilike.${q},nome.ilike.${q}`)
