@@ -4,6 +4,11 @@ import { Search, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 type Catalogo = 'cid10' | 'sigtap' | 'cbo'
 
+function filtroIlike(valor: string) {
+  const padrao = `%${valor.trim().replace(/\\/g, '\\\\').replace(/"/g, '\\"')}%`
+  return `"${padrao}"`
+}
+
 export interface CatalogoItem {
   codigo: string
   descricao?: string
@@ -65,8 +70,8 @@ export function CatalogoSearchModal({ open, onClose, catalogo, onSelect, titulo 
       let request = supabase.from(tableName).select(selectCols, { count: 'exact' })
 
       if (q.trim().length >= 1) {
-        const term = `%${q.trim().replace(/"/g, '')}%`
-        request = request.or(`codigo.ilike."${term}",${descCol}.ilike."${term}"`)
+        const term = filtroIlike(q.trim())
+        request = request.or(`codigo.ilike.${term},${descCol}.ilike.${term}`)
       }
 
       if (catalogo === 'sigtap') {
