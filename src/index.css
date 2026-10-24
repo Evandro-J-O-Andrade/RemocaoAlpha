@@ -1416,22 +1416,49 @@ html.dark .login-footer {
     display: flex;
   }
 
+  /* No mobile, recolher para uma rail de ícones; não esconder o sidebar. */
   .auth-sidebar {
-    transform: translateX(-100%);
+    width: 280px;
+    transform: translateX(0);
     box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+    transition: width 0.25s ease, transform 0.25s ease;
   }
 
   .auth-sidebar--mobile-closed {
+    width: 72px;
     transform: translateX(0);
+  }
+
+  .auth-sidebar--mobile-closed .auth-sidebar__brand-text,
+  .auth-sidebar--mobile-closed .auth-sidebar__nav-label,
+  .auth-sidebar--mobile-closed .auth-sidebar__user-info,
+  .auth-sidebar--mobile-closed .auth-sidebar__signout span {
+    display: none;
+  }
+
+  .auth-sidebar--mobile-closed .auth-sidebar__brand,
+  .auth-sidebar--mobile-closed .auth-sidebar__footer {
+    padding-inline: 0.75rem;
+  }
+
+  .auth-sidebar--mobile-closed .auth-sidebar__nav-item,
+  .auth-sidebar--mobile-closed .auth-sidebar__signout {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .auth-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    border: 0;
+    background: rgba(2, 6, 23, 0.48);
+    cursor: pointer;
   }
 
   .auth-layout__body {
     margin-left: 0;
     width: 100%;
-  }
-
-  .auth-sidebar--mobile-closed ~ .auth-layout__body {
-    margin-left: 0;
   }
 }
 
