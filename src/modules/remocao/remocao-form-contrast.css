@@ -113,3 +113,43 @@
     font-size: 16px;
   }
 }
+
+
+/* Campos dos catálogos CID-10, CBO e SIGTAP:
+   superfície opaca e texto explícito nos dois temas, inclusive nas sugestões. */
+.remocao-module .catalogo-select-input,
+.remocao-module .catalogo-modal-input {
+  color: var(--rem-text) !important;
+  background-color: var(--rem-surface) !important;
+  border-color: var(--rem-border-strong) !important;
+  opacity: 1;
+}
+
+.remocao-module .catalogo-select-input::placeholder,
+.remocao-module .catalogo-modal-input::placeholder {
+  color: var(--rem-text-muted) !important;
+  opacity: 1;
+}
+
+.remocao-module .catalogo-select-suggestions {
+  color: var(--rem-text) !important;
+  background-color: var(--rem-surface) !important;
+  border-color: var(--rem-border-strong) !important;
+  opacity: 1;
+}
+
+.remocao-module .catalogo-select-option {
+  color: var(--rem-text) !important;
+  background-color: var(--rem-surface) !important;
+}
+
+.remocao-module .catalogo-select-option:hover,
+.remocao-module .catalogo-select-option:focus-visible {
+  color: var(--rem-text) !important;
+  background-color: var(--rem-surface-muted) !important;
+}
+
+.remocao-module [role="dialog"] .catalogo-modal-input {
+  color: var(--rem-text) !important;
+  background-color: var(--rem-surface) !important;
+}
