@@ -59,7 +59,7 @@ export function AdminManagementPage() {
 
   const canManageUsers = user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root
   const canManageRoles = user?.permissions.includes(Perm.ADMIN_ROLES_MANAGE) || user?.is_root
-  const canAssignRoles = user?.permissions.includes(Perm.ADMIN_USERS_ASSIGN_ROLE) || user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root || user?.papel === 'admin_master' || user?.papel === 'admin_gestao'
+  const canAssignRoles = user?.permissions.includes(Perm.ADMIN_USERS_ASSIGN_ROLE) || user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root || /admin|gestor|owner|dono/i.test(user?.papel || '')
   const canManageTenants = user?.permissions.includes(Perm.ADMIN_TENANT_MANAGE) || user?.is_root
 
   const availableTabs: Tab[] = []
@@ -158,7 +158,7 @@ export function AdminManagementPage() {
     setError(null)
     setSuccess(null)
     try {
-      if (!user.is_root && user.papel !== 'admin_master' && user.papel !== 'admin_gestao') {
+      if (!user.is_root && !/admin|gestor|owner|dono/i.test(user.papel || '')) {
         const ownRole = assignableRoles.find((role) => role.key === user.papel)
         if (ownRole && selectedRole.nivel >= ownRole.nivel) {
           throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
