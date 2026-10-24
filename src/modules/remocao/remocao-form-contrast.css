@@ -1,0 +1,115 @@
+/* Correções de contraste e densidade dos formulários Remoção Alpha.
+   Escopo restrito ao módulo; usa tokens que alternam com html.dark. */
+.remocao-module fieldset {
+  min-width: 0;
+  padding: 20px;
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border: 1px solid var(--rem-border-strong);
+  border-radius: var(--rem-radius-md);
+}
+
+.remocao-module fieldset > legend {
+  max-width: 100%;
+  padding: 0 8px;
+  color: var(--rem-text) !important;
+  background: var(--rem-surface);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.remocao-module form label,
+.remocao-module form .text-foreground,
+.remocao-module form .font-medium,
+.remocao-module form .font-semibold {
+  color: var(--rem-text);
+}
+
+.remocao-module form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.remocao-module form select,
+.remocao-module form textarea {
+  min-height: 46px;
+  padding: 11px 13px;
+  color: var(--rem-text);
+  background-color: var(--rem-surface-muted);
+  border: 1px solid var(--rem-border-strong);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: none;
+}
+
+.remocao-module form textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.remocao-module form input::placeholder,
+.remocao-module form textarea::placeholder {
+  color: var(--rem-text-muted);
+  opacity: 1;
+}
+
+.remocao-module form select option {
+  color: var(--rem-text);
+  background: var(--rem-surface);
+}
+
+.remocao-module form input:focus,
+.remocao-module form select:focus,
+.remocao-module form textarea:focus {
+  border-color: var(--rem-primary);
+  outline: 2px solid transparent;
+  box-shadow: var(--rem-shadow-focus);
+}
+
+.remocao-module form input:disabled,
+.remocao-module form select:disabled,
+.remocao-module form textarea:disabled {
+  color: var(--rem-text-muted);
+  background: var(--rem-surface-muted);
+  opacity: 1;
+}
+
+.remocao-module .remocao-section {
+  padding: 18px 20px;
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border-color: var(--rem-border-strong);
+  border-radius: var(--rem-radius-md);
+}
+
+.remocao-module .remocao-section legend {
+  color: var(--rem-text) !important;
+  background: var(--rem-surface);
+  font-weight: 750;
+}
+
+.remocao-module .remocao-section .remocao-muted,
+.remocao-module .remocao-section .remocao-text-muted {
+  color: var(--rem-text-muted);
+}
+
+.remocao-module .remocao-section > div {
+  color: var(--rem-text);
+}
+
+.remocao-module .remocao-card {
+  color: var(--rem-text);
+  background: var(--rem-surface);
+  border-color: var(--rem-border);
+}
+
+@media (max-width: 640px) {
+  .remocao-module fieldset {
+    padding: 15px;
+  }
+
+  .remocao-module form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .remocao-module form select,
+  .remocao-module form textarea {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
