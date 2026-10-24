@@ -1,3 +1,4 @@
+import '@/modules/remocao/remocao-form-contrast.css'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
