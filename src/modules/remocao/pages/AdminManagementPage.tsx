@@ -59,7 +59,7 @@ export function AdminManagementPage() {
 
   const canManageUsers = user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root
   const canManageRoles = user?.permissions.includes(Perm.ADMIN_ROLES_MANAGE) || user?.is_root
-  const canAssignRoles = user?.permissions.includes(Perm.ADMIN_USERS_ASSIGN_ROLE) || user?.is_root
+  const canAssignRoles = user?.permissions.includes(Perm.ADMIN_USERS_ASSIGN_ROLE) || user?.permissions.includes(Perm.ADMIN_USERS_MANAGE) || user?.is_root || user?.papel === 'admin_master' || user?.papel === 'admin_gestao'
   const canManageTenants = user?.permissions.includes(Perm.ADMIN_TENANT_MANAGE) || user?.is_root
 
   const availableTabs: Tab[] = []
@@ -158,7 +158,7 @@ export function AdminManagementPage() {
     setError(null)
     setSuccess(null)
     try {
-      if (!user.is_root) {
+      if (!user.is_root && user.papel !== 'admin_master' && user.papel !== 'admin_gestao') {
         const ownRole = assignableRoles.find((role) => role.key === user.papel)
         if (ownRole && selectedRole.nivel >= ownRole.nivel) {
           throw new Error('Você só pode atribuir funções de nível inferior ao seu próprio acesso.')
@@ -193,6 +193,44 @@ export function AdminManagementPage() {
       await loadData('users')
     } catch (err: any) {
       setError(err.message)
+    }
+  }
+
+  const handleToggleStatus = async (membership: TenantMembership) => {
+    if (!user || !canManageUsers) return
+    const isActive = membership.status === 'ativo' || membership.status === 'aprovado'
+    const nextStatus = isActive ? 'inativo' : 'ativo'
+    setError(null)
+    setSuccess(null)
+    try {
+      const { error: updateError } = await supabase
+        .from('tenant_memberships')
+        .update({ status: nextStatus })
+        .eq('id', membership.id)
+        .eq('tenant_id', membership.tenant_id)
+      if (updateError) throw updateError
+      setSuccess(nextStatus === 'ativo' ? 'Usuário ativado.' : 'Usuário desativado.')
+      await loadData('users')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Não foi possível alterar o status.')
+    }
+  }
+
+  const handleResetPassword = async (membership: TenantMembership) => {
+    if (!user || !canManageUsers) return
+    const email = membership.person?.email
+    if (!email) {
+      setError('Usuário sem e-mail cadastrado para redefinição de senha.')
+      return
+    }
+    setError(null)
+    setSuccess(null)
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
+      if (resetError) throw resetError
+      setSuccess(`E-mail de redefinição de senha enviado para ${email}.`)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar a redefinição de senha.')
     }
   }
 
@@ -297,6 +335,24 @@ export function AdminManagementPage() {
                               Aprovar
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => void handleToggleStatus(m)}
+                            className={`remocao-btn remocao-btn--sm ${m.status === 'ativo' || m.status === 'aprovado' ? 'remocao-btn--ghost' : 'remocao-btn--primary'}`}
+                            disabled={m.person_id === user?.id || m.papel === 'admin_master' || m.role?.key === 'admin_master'}
+                            aria-label={m.status === 'ativo' || m.status === 'aprovado' ? 'Desativar usuário' : 'Ativar usuário'}
+                          >
+                            {m.status === 'ativo' || m.status === 'aprovado' ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleResetPassword(m)}
+                            className="remocao-btn remocao-btn--sm remocao-btn--ghost"
+                            disabled={!m.person?.email}
+                            aria-label="Redefinir senha"
+                          >
+                            Resetar senha
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -389,7 +445,7 @@ export function AdminManagementPage() {
                     onChange={(event) => setEditRoleId(event.target.value)}
                     disabled={!canAssignRoles || editing.person_id === user?.id || editing.papel === 'admin_master' || !roles.length}
                   >
-                    {assignableRoles.filter((role) => role.key !== 'admin_master' && (role.id === editing.role_id || user?.is_root || (!role.sistema && role.nivel < (assignableRoles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER)))).map((role) => (
+                    {assignableRoles.filter((role) => role.key !== 'admin_master' && (role.id === editing.role_id || user?.is_root || canAssignRoles || (!role.sistema && role.nivel < (assignableRoles.find((ownRole) => ownRole.key === user?.papel)?.nivel ?? Number.MAX_SAFE_INTEGER)))).map((role) => (
                       <option key={role.id} value={role.id}>{role.nome} · nível {role.nivel}</option>
                     ))}
                   </select>
